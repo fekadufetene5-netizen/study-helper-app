@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">የጥናት ጓደኛ</string>
+
+    <color name="brand">#2B6777</color>
+    <color name="brand_dark">#1B4652</color>
+
+    <style name="Theme.StudyCompanion" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand</item>
+        <item name="colorPrimaryDark">@color/brand_dark</item>
+        <item name="android:statusBarColor">@color/brand_dark</item>
+        <item name="android:windowBackground">@color/brand</item>
+    </style>
+</resources>
