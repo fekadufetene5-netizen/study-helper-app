@@ -1,0 +1,1145 @@
+<title>የጥናት ጓደኛ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Ethiopic:wght@400;600;700&family=Noto+Sans+Ethiopic:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: fixed left nav rail (icons + Amharic labels) on desktop,
+   collapsing to a bottom tab bar on phones; single-page content panes
+   switched by location.hash. Subject: a personal study companion for an
+   Amharic-speaking IST student, so Ethiopic-first typefaces carry both
+   script and Latin/numeral content throughout. */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --fg:#1b2430; --muted:#5b6577; --border:#dde1e7;
+  --accent:#2b6777; --accent-fg:#ffffff; --accent-soft:#e4eef0;
+  --gold:#b8862e; --gold-soft:#f6ecd9;
+  --success:#2f8f5b; --success-soft:#e3f3e9;
+  --danger:#c23b3b; --danger-soft:#fbe8e8;
+  --shadow:0 1px 2px rgba(27,36,48,.06),0 4px 14px rgba(27,36,48,.06);
+  --font-display:'Noto Serif Ethiopic','Noto Serif',Georgia,serif;
+  --font-body:'Noto Sans Ethiopic','Noto Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono','Noto Sans Ethiopic',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11161d; --surface:#182029; --fg:#e8ecf1; --muted:#93a0b4; --border:#2a333f;
+    --accent:#6cc0d3; --accent-fg:#0b1620; --accent-soft:#1d3238;
+    --gold:#e0a84f; --gold-soft:#2e2515;
+    --success:#55bd87; --success-soft:#163525;
+    --danger:#e2726f; --danger-soft:#3a1d1d;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 18px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11161d; --surface:#182029; --fg:#e8ecf1; --muted:#93a0b4; --border:#2a333f;
+  --accent:#6cc0d3; --accent-fg:#0b1620; --accent-soft:#1d3238;
+  --gold:#e0a84f; --gold-soft:#2e2515;
+  --success:#55bd87; --success-soft:#163525;
+  --danger:#e2726f; --danger-soft:#3a1d1d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 18px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);line-height:1.5;display:flex;min-height:100%}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;text-wrap:balance;margin:0 0 .3em}
+h1{font-size:1.5rem}
+h2{font-size:1.2rem}
+h3{font-size:1rem}
+p{margin:.2em 0 .8em;color:var(--fg)}
+button{font:inherit;color:inherit}
+select,input,textarea{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.5em .6em}
+select:focus,input:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+
+/* ---- nav rail ---- */
+#navrail{
+  width:220px;flex:0 0 220px;background:var(--surface);border-inline-end:1px solid var(--border);
+  display:flex;flex-direction:column;padding:16px 10px;gap:4px;
+  position:sticky;top:0;height:100vh;
+}
+#navrail .brand{display:flex;align-items:center;gap:.5em;padding:8px 10px 18px;font-family:var(--font-display);font-weight:700;font-size:1.05rem}
+#navrail .brand svg{flex:0 0 auto}
+.navbtn{display:flex;align-items:center;gap:.7em;padding:.65em .8em;border-radius:10px;border:none;background:transparent;text-align:start;cursor:pointer;color:var(--fg)}
+.navbtn svg{flex:0 0 auto;opacity:.8}
+.navbtn:hover{background:var(--accent-soft)}
+.navbtn[aria-current="page"]{background:var(--accent);color:var(--accent-fg)}
+.navbtn[aria-current="page"] svg{opacity:1}
+#navrail .spacer{flex:1}
+#themebtn{margin-top:8px;font-size:.85rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:.5em .7em;cursor:pointer}
+
+#main{flex:1;min-width:0;padding:26px 28px 90px;max-width:1000px}
+.pane{display:flex;flex-direction:column;gap:18px}
+.eyebrow{font-size:.78rem;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.row{display:flex;align-items:center;gap:.6em;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:.5em;background:var(--accent);color:var(--accent-fg);border:none;border-radius:9px;padding:.6em 1em;font-weight:600;cursor:pointer}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.sm{padding:.4em .75em;font-size:.85rem;border-radius:7px}
+.pill{display:inline-flex;align-items:center;gap:.35em;font-size:.78rem;padding:.25em .65em;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+.pill.gold{background:var(--gold-soft);color:var(--gold)}
+.pill.success{background:var(--success-soft);color:var(--success)}
+.pill.danger{background:var(--danger-soft);color:var(--danger)}
+.muted{color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:.6em 0}
+
+/* home */
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat .n{font-family:var(--font-mono);font-size:1.6rem;font-weight:600}
+.stat .l{font-size:.8rem;color:var(--muted)}
+.statrow{display:flex;gap:22px;flex-wrap:wrap}
+.tasklite{display:flex;justify-content:space-between;gap:10px;padding:.5em 0;border-top:1px solid var(--border)}
+.tasklite:first-child{border-top:none}
+
+/* schedule */
+table.sched{width:100%;border-collapse:collapse}
+table.sched th{text-align:start;font-size:.78rem;color:var(--muted);padding:.4em .3em;border-bottom:1px solid var(--border)}
+table.sched td{padding:.5em .3em;border-bottom:1px solid var(--border);vertical-align:middle}
+table.sched td.day{white-space:nowrap;font-weight:600}
+table.sched select{min-width:110px}
+.slotwrap{display:flex;gap:6px;flex-wrap:wrap}
+.durnote{font-size:.78rem;color:var(--muted);white-space:nowrap}
+@media (max-width:700px){
+  table.sched, table.sched thead, table.sched tbody, table.sched tr, table.sched td{display:block;width:100%}
+  table.sched thead{display:none}
+  table.sched tr{border-bottom:1px solid var(--border);padding:.6em 0}
+  table.sched td{border:none;padding:.15em 0}
+}
+
+/* timer */
+.timerwrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 0}
+.ring{position:relative;width:240px;height:240px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .bgc{fill:none;stroke:var(--border);stroke-width:10}
+.ring .fgc{fill:none;stroke:var(--accent);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .3s linear}
+.ring .time{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:2.1rem;font-weight:600}
+.presetrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.preset{border:1px solid var(--border);background:var(--surface);border-radius:9px;padding:.4em .9em;cursor:pointer;font-size:.85rem}
+.preset[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:700}
+
+/* tasks */
+.tasklist{display:flex;flex-direction:column;gap:8px}
+.taskrow{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:10px 12px}
+.taskrow.done{opacity:.55}
+.taskrow .chk{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);flex:0 0 auto;margin-top:2px;cursor:pointer;background:var(--surface);display:flex;align-items:center;justify-content:center}
+.taskrow .chk.on{background:var(--success);border-color:var(--success)}
+.taskrow .body{flex:1;min-width:0}
+.taskrow .title{font-weight:600}
+.taskrow .meta{font-size:.8rem;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.taskrow .del{background:none;border:none;color:var(--muted);cursor:pointer;padding:.3em}
+.taskrow .del:hover{color:var(--danger)}
+.addform{display:flex;gap:8px;flex-wrap:wrap}
+.addform input[type="text"]{flex:1;min-width:140px}
+.filterrow{display:flex;gap:6px}
+.filterrow button{border:1px solid var(--border);background:var(--surface);border-radius:8px;padding:.35em .8em;font-size:.82rem;cursor:pointer}
+.filterrow button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+
+/* cards */
+.decktabs{display:flex;gap:6px;flex-wrap:wrap}
+.decktab{border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:.4em 1em;font-size:.85rem;cursor:pointer}
+.decktab[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.flashcard{perspective:1200px;height:220px;cursor:pointer}
+.flashcard .inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flashcard.flipped .inner{transform:rotateY(180deg)}
+.flashcard .face{position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--border);border-radius:14px;background:var(--surface);display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;font-size:1.05rem;box-shadow:var(--shadow)}
+.flashcard .back{transform:rotateY(180deg);background:var(--accent-soft)}
+.cardlist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.cardlistitem{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;border-top:1px solid var(--border);padding:.45em 0}
+.cardlistitem:first-child{border-top:none}
+
+/* calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.calgrid .dow{font-size:.72rem;color:var(--muted);text-align:center;padding-bottom:4px}
+.calcell{aspect-ratio:1;border:1px solid var(--border);border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:var(--surface);cursor:pointer;font-family:var(--font-mono);font-size:.85rem}
+.calcell.pad{visibility:hidden}
+.calcell.today{border-color:var(--accent);font-weight:700;color:var(--accent)}
+.calcell.sel{background:var(--accent);color:var(--accent-fg)}
+.calcell .dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.calcell.sel .dot{background:var(--accent-fg)}
+
+/* toast */
+#toast{position:fixed;bottom:18px;inset-inline-start:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:.7em 1.1em;border-radius:10px;font-size:.88rem;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:50}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+#toast button{background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer}
+
+/* mobile bottom tabs */
+#tabbar{display:none}
+@media (max-width:820px){
+  body{flex-direction:column}
+  #navrail{display:none}
+  #mobiletop{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:env(safe-area-inset-top,0px);z-index:10}
+  #main{padding:18px 16px 90px;max-width:100%}
+  #tabbar{display:flex;position:fixed;bottom:0;inset-inline:0;background:var(--surface);border-top:1px solid var(--border);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));z-index:20}
+  #tabbar .navbtn{flex-direction:column;flex:1;gap:3px;padding:.4em 0;border-radius:10px;font-size:.68rem;text-align:center}
+  #tabbar .navbtn[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+}
+#mobiletop{display:none;font-family:var(--font-display);font-weight:700}
+
+.icon{width:19px;height:19px;flex:0 0 auto}
+</style>
+
+<div id="navrail">
+  <div class="brand"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5V6a2 2 0 0 1 2-2h11a1 1 0 0 1 1 1v13"/><path d="M4 19.5A2 2 0 0 0 6 21h12"/><path d="M4 19.5A2 2 0 0 1 6 18h12"/></svg> የጥናት ጓደኛ</div>
+  <nav id="navlinks"></nav>
+  <div class="spacer"></div>
+  <button id="themebtn" type="button">🌓 ገጽታ ቀይር</button>
+</div>
+
+<div id="mobiletop">
+  <span id="mobiletitle">የጥናት ጓደኛ</span>
+  <button id="themebtnMobile" type="button" class="btn ghost sm">ገጽታ</button>
+</div>
+
+<main id="main"></main>
+
+<nav id="tabbar"></nav>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- data ---------------- */
+var LS_KEY = "fekadu-study-v1";
+var COURSES = [
+  {id:"InST2021", name:"Fundamentals of IST"},
+  {id:"InST2013", name:"Programming II"},
+  {id:"InST2023", name:"Data Comm & Networks"},
+  {id:"MATH201",  name:"Linear Algebra"},
+  {id:"ECON2103", name:"Economics"},
+  {id:"STAT2015", name:"Statistics"},
+  {id:"COMM101",  name:"Communication Skills I"}
+];
+function courseName(id){
+  if(id==="FREE"||!id) return "ነፃ";
+  var c = COURSES.filter(function(c){return c.id===id})[0];
+  return c ? (c.id+" · "+c.name) : id;
+}
+function courseShort(id){
+  if(id==="FREE"||!id) return "ነፃ";
+  var c = COURSES.filter(function(c){return c.id===id})[0];
+  return c ? c.id : id;
+}
+
+var DOW = ["mon","tue","wed","thu","fri","sat","sun"];
+var DOW_LABEL = {mon:"ሰኞ",tue:"ማክሰኞ",wed:"ረቡዕ",thu:"ሐሙስ",fri:"አርብ",sat:"ቅዳሜ",sun:"እሁድ"};
+var DOW_SHORT = {mon:"ሰ",tue:"ማ",wed:"ረ",thu:"ሐ",fri:"አ",sat:"ቅ",sun:"እ"};
+var DOW_DUR   = {mon:"ምሽት · 3 ሰዓት",tue:"ምሽት · 3 ሰዓት",wed:"ምሽት · 3 ሰዓት",thu:"ምሽት · 3 ሰዓት",fri:"ምሽት · 3 ሰዓት (Statistics ቀነሰ)",sat:"ቀኑን ሙሉ",sun:"2 ሰዓት"};
+var SLOT_COUNT = {mon:2,tue:2,wed:2,thu:2,fri:2,sat:4,sun:1};
+
+function defaultState(){
+  return {
+    schedule:{
+      mon:["InST2021","MATH201"],
+      tue:["InST2013","MATH201"],
+      wed:["InST2023","MATH201"],
+      thu:["ECON2103","MATH201"],
+      fri:["COMM101","STAT2015"],
+      sat:["InST2013","InST2023","MATH201","STAT2015"],
+      sun:["MATH201"]
+    },
+    tasks:[
+      {id:"ex1", title:"ምሳሌ፦ Linear Algebra Assignment", course:"MATH201", due:addDays(3), priority:"high", done:false, example:true}
+    ],
+    decks:{
+      InST2021:[], InST2013:[
+        {q:"Chapter 4 (Advanced Topics) ውስጥ ምን ርዕሶች ይካተታሉ?", a:"OOP, tkinter GUI, Recursion, 2D game/robot programming"}
+      ],
+      InST2023:[
+        {q:"OSI/TCP-IP ሞዴሎች የሚሸፈኑት በየትኛው ምዕራፍ ነው?", a:"ምዕራፍ 3 — Network Models and Protocols"}
+      ],
+      MATH201:[
+        {q:"የመጀመሪያው ምዕራፍ ርዕስ ምንድን ነው?", a:"Characteristic Equation"},
+        {q:"ምዕራፍ 4 ርዕስ ምንድን ነው?", a:"Orthogonality"}
+      ],
+      ECON2103:[], STAT2015:[], COMM101:[]
+    },
+    focus:{},            // {"2026-10-12": minutes}
+    stats:{cardReviews:0, totalSessions:0, seenBadges:[]},
+    createdAt: todayISO()
+  };
+}
+
+function todayISO(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function pad(n){ return n<10?"0"+n:""+n; }
+function addDays(n){ var d=new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+var storageOK = true;
+var state = loadState();
+function loadState(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    if(raw) return Object.assign(defaultState(), JSON.parse(raw));
+    return defaultState();
+  }catch(e){ storageOK=false; return defaultState(); }
+}
+function saveState(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  catch(e){ storageOK=false; }
+}
+
+/* ---------------- capabilities: assets + db, for course materials ---------------- */
+var assetsCap=null, dbCap=null, capsReady=false, materialsUnsub=null, materialsCache=[];
+function initCapabilities(){
+  try{
+    if(window.claude && window.claude.use){
+      Promise.all([claude.use("assets"), claude.use("db")]).then(function(r){
+        assetsCap=r[0]; dbCap=r[1]; capsReady=true;
+        if(currentRoute()==="materials") render();
+      }).catch(function(){ capsReady=true; if(currentRoute()==="materials") render(); });
+    } else { capsReady=true; }
+  }catch(e){ capsReady=true; }
+}
+
+/* ---------------- gamification: streaks, XP, badges, confetti ---------------- */
+var BADGES=[
+  {id:"streak3", label:"🔥 3-ቀን ተከታታይ ጥናት", test:function(c){return c.streak>=3;}},
+  {id:"streak7", label:"🔥🔥 7-ቀን ተከታታይ ጥናት", test:function(c){return c.streak>=7;}},
+  {id:"tasks5", label:"✅ 5 ተግባራት ጨረስክ", test:function(c){return c.tasksDone>=5;}},
+  {id:"sessions10", label:"⏱ 10 የጥናት ክፍለ ጊዜያት", test:function(c){return (state.stats.totalSessions||0)>=10;}},
+  {id:"cards20", label:"🧠 20 ካርድ ገመገምክ", test:function(c){return (state.stats.cardReviews||0)>=20;}}
+];
+function computeStreak(){
+  var n=0, d=new Date();
+  while(true){
+    var iso=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+    if((state.focus[iso]||0)>0){ n++; d.setDate(d.getDate()-1); } else break;
+  }
+  return n;
+}
+function computeGamification(){
+  var streak=computeStreak();
+  var tasksDone=state.tasks.filter(function(t){return t.done;}).length;
+  var totalMin=Object.keys(state.focus).reduce(function(a,k){return a+state.focus[k];},0);
+  var xp=totalMin+tasksDone*10+(state.stats.cardReviews||0)*2;
+  var level=Math.floor(xp/150)+1;
+  var ctx={streak:streak, tasksDone:tasksDone};
+  var badges=BADGES.map(function(b){ return {id:b.id, label:b.label, earned:b.test(ctx)}; });
+  return {streak:streak, xp:xp, level:level, levelProgress:(xp%150)/150, badges:badges};
+}
+function checkNewBadges(){
+  var g=computeGamification();
+  var seen=state.stats.seenBadges||[];
+  var newly=g.badges.filter(function(b){ return b.earned && seen.indexOf(b.id)===-1; });
+  if(newly.length){
+    state.stats.seenBadges=seen.concat(newly.map(function(b){return b.id;}));
+    saveState();
+    newly.forEach(function(b){ toast("🏅 አዲስ ባጅ፦ "+b.label); });
+    var anchor=document.getElementById("main");
+    if(anchor) celebrate(anchor);
+  }
+}
+function celebrate(anchorEl){
+  try{
+    var rect=anchorEl.getBoundingClientRect();
+    var colors=["var(--accent)","var(--gold)","var(--success)"];
+    for(var i=0;i<16;i++){
+      (function(i){
+        var dot=document.createElement("div");
+        var x=rect.left+rect.width*Math.random();
+        var y=rect.top+Math.min(140, rect.height*0.3);
+        dot.style.cssText="position:fixed;left:"+x+"px;top:"+y+"px;width:7px;height:7px;border-radius:50%;background:"+colors[i%3]+";pointer-events:none;z-index:60;opacity:1;transition:transform 900ms ease-out,opacity 900ms ease-out";
+        document.body.appendChild(dot);
+        var dx=(Math.random()-0.5)*160, dy=120+Math.random()*120, rot=Math.random()*360;
+        requestAnimationFrame(function(){
+          dot.style.transform="translate("+dx+"px,"+dy+"px) rotate("+rot+"deg)";
+          dot.style.opacity="0";
+        });
+        setTimeout(function(){ dot.remove(); }, 950);
+      })(i);
+    }
+  }catch(e){}
+}
+var MOTIVATION=[
+  "ትንሽ ትንሽ እየሰራህ፣ ትልቅ ግብ ትደርሳለህ።",
+  "ዛሬ የምትሰራው ጥናት፣ የነገው ውጤትህ መሰረት ነው።",
+  "ያልተረዳኸው ርዕስ፣ ትምህርትህን ያጠናክራል እንጂ አያስቆምህም።",
+  "በየቀኑ ትንሽ መሻሻል፣ በሳምንት ትልቅ ለውጥ ይፈጥራል።",
+  "የተጀመረ ስራ፣ ግማሽ የተጠናቀቀ ስራ ነው።",
+  "ዛሬ ከባድ የሚመስለው፣ ነገ ልምድ ይሆንልሃል።",
+  "ራስህን ከትላንትናው ጋር አወዳድር እንጂ ከሌላ ሰው ጋር አይደለም።",
+  "ጥናት ትዕግስት ይፈልጋል፤ ትዕግስትህ ዋጋ አለው።"
+];
+function motivationForToday(){
+  var d=new Date();
+  var doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
+  return MOTIVATION[doy % MOTIVATION.length];
+}
+
+/* ---------------- home-screen install banner ---------------- */
+function isStandalone(){
+  try{ return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true; }
+  catch(e){ return false; }
+}
+function installDismissed(){
+  try{ return localStorage.getItem("fekadu-install-dismissed")==="1"; }catch(e){ return false; }
+}
+function dismissInstall(){
+  try{ localStorage.setItem("fekadu-install-dismissed","1"); }catch(e){}
+}
+
+/* ---------------- icons ---------------- */
+var ICONS = {
+  home:'<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9"/>',
+  schedule:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8 3v4M16 3v4"/>',
+  timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/>',
+  tasks:'<path d="M5 6h14M5 12h14M5 18h14" stroke-dasharray="0"/><path d="m5 6 1.3 1.3L8 5.5M5 12l1.3 1.3L8 11.5M5 18l1.3 1.3L8 17.5"/>',
+  cards:'<rect x="3" y="7" width="13" height="10" rx="2"/><rect x="7" y="4" width="13" height="10" rx="2" fill="var(--surface)"/>',
+  materials:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
+  calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8 3v4M16 3v4"/><circle cx="9" cy="14" r="1" fill="currentColor"/><circle cx="13" cy="14" r="1" fill="currentColor"/><circle cx="17" cy="14" r="1" fill="currentColor"/>'
+};
+function iconSvg(name){ return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+ICONS[name]+'</svg>'; }
+
+var ROUTES = [
+  {id:"home", label:"መነሻ"},
+  {id:"schedule", label:"ሰሌዳ"},
+  {id:"timer", label:"ሰዓት ቆጣሪ"},
+  {id:"tasks", label:"ተግባራት"},
+  {id:"cards", label:"ፍላሽ ካርዶች"},
+  {id:"materials", label:"ማቴሪያሎች"},
+  {id:"calendar", label:"ካላንደር"}
+];
+
+/* ---------------- toast ---------------- */
+var toastEl = document.getElementById("toast");
+var toastTimer=null;
+function toast(msg, undoFn){
+  toastEl.innerHTML = "";
+  var span=document.createElement("span"); span.textContent=msg; toastEl.appendChild(span);
+  if(undoFn){
+    var b=document.createElement("button"); b.textContent="መልስ"; b.type="button";
+    b.addEventListener("click",function(){ undoFn(); toastEl.classList.remove("show"); });
+    toastEl.appendChild(b);
+  }
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ toastEl.classList.remove("show"); }, 4000);
+}
+
+/* ---------------- theme ---------------- */
+function currentTheme(){ try{ return localStorage.getItem("fekadu-theme")||"system"; }catch(e){ return "system"; } }
+function applyTheme(){
+  var t=currentTheme();
+  if(t==="system") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+}
+function toggleTheme(){
+  var t=currentTheme();
+  var next = t==="system" ? "dark" : (t==="dark" ? "light" : "system");
+  try{ localStorage.setItem("fekadu-theme", next); }catch(e){}
+  applyTheme();
+  toast(next==="system"?"ገጽታ፦ ራስ-ሰር":next==="dark"?"ገጽታ፦ ጨለማ":"ገጽታ፦ ብርሃን");
+}
+applyTheme();
+document.getElementById("themebtn").addEventListener("click", toggleTheme);
+document.getElementById("themebtnMobile").addEventListener("click", toggleTheme);
+
+/* ---------------- router ---------------- */
+function currentRoute(){
+  var h=(location.hash||"#home").replace("#","");
+  return ROUTES.some(function(r){return r.id===h}) ? h : "home";
+}
+function navigate(id){ location.hash="#"+id; }
+function buildNav(container, isTab){
+  container.innerHTML="";
+  ROUTES.forEach(function(r){
+    var b=document.createElement("button");
+    b.className="navbtn"; b.type="button";
+    b.innerHTML = iconSvg(r.id) + "<span>"+r.label+"</span>";
+    b.addEventListener("click", function(){ navigate(r.id); });
+    container.appendChild(b);
+  });
+}
+buildNav(document.getElementById("navlinks"));
+buildNav(document.getElementById("tabbar"));
+
+function highlightNav(){
+  var route=currentRoute();
+  [document.getElementById("navlinks"), document.getElementById("tabbar")].forEach(function(nav){
+    Array.prototype.forEach.call(nav.children, function(btn,i){
+      if(ROUTES[i].id===route) btn.setAttribute("aria-current","page");
+      else btn.removeAttribute("aria-current");
+    });
+  });
+  document.getElementById("mobiletop").style.display = "flex";
+  document.getElementById("mobiletitle").textContent = ROUTES.filter(function(r){return r.id===route})[0].label;
+}
+
+window.addEventListener("hashchange", render);
+document.addEventListener("DOMContentLoaded", function(){ render(); startTimerTick(); initCapabilities(); });
+
+function render(){
+  highlightNav();
+  var main=document.getElementById("main");
+  var route=currentRoute();
+  main.innerHTML="";
+  var pane=document.createElement("div"); pane.className="pane";
+  main.appendChild(pane);
+  ({
+    home: renderHome,
+    schedule: renderSchedule,
+    timer: renderTimer,
+    tasks: renderTasks,
+    cards: renderCards,
+    materials: renderMaterials,
+    calendar: renderCalendar
+  })[route](pane);
+  if(!storageOK) {
+    var w=document.createElement("div");
+    w.className="card";
+    w.style.borderColor="var(--gold)";
+    w.innerHTML = '<p class="muted" style="margin:0">⚠️ ውሂብ በዚህ አሳሽ ላይ ማስቀመጥ አልተቻለም (ምናልባት የግል/incognito መስኮት ነው)። ገጹን ስትዘጋ የጨመርከው መረጃ ሊጠፋ ይችላል።</p>';
+    pane.insertBefore(w, pane.firstChild);
+  }
+}
+
+/* ---------------- HOME ---------------- */
+function renderHome(pane){
+  var jsDow = new Date().getDay(); // 0 Sun..6 Sat
+  var key = ["sun","mon","tue","wed","thu","fri","sat"][jsDow];
+  var todays = state.schedule[key]||[];
+  var pendingTasks = state.tasks.filter(function(t){return !t.done;})
+    .sort(function(a,b){return a.due<b.due?-1:1;});
+  var overdue = pendingTasks.filter(function(t){return t.due<todayISO();}).length;
+  var minutesToday = state.focus[todayISO()]||0;
+  var g = computeGamification();
+
+  pane.innerHTML =
+    '<div><div class="eyebrow">'+greetingWord()+'</div><h1>እንደምን ዋልክ፣ ፈቃዱ</h1>'+
+    '<p class="muted">ዛሬ '+formatDate(new Date())+' · '+DOW_LABEL[key]+'</p>'+
+    '<p class="muted" style="font-style:italic">"'+motivationForToday()+'"</p></div>'+
+
+    (!isStandalone() && !installDismissed() ?
+    '<div class="card" id="installCard" style="border-color:var(--accent)">'+
+      '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px">'+
+        '<div><h3 style="margin:0 0 4px">📲 ይህን ወደ ስልክህ ቤት ገጽ ጨምር</h3>'+
+        '<p class="muted" style="margin:0">አንድ ጠቅታ ብቻ የሚከፍት አዶ በቤት ገጽህ ላይ ይኖረዋል።</p></div>'+
+        '<button class="del" id="installDismiss" type="button" aria-label="ዝጋ" style="font-size:1rem;flex:0 0 auto">✕</button>'+
+      '</div>'+
+      '<ol style="margin:10px 0 0;padding-inline-start:20px;font-size:.88rem;display:flex;flex-direction:column;gap:4px">'+
+        '<li>ይህን ገጽ Chrome ላይ ክፈት</li>'+
+        '<li>ከላይ ቀኝ ያለውን ⋮ (ሶስት ነጥብ) ምናሌ ንካ</li>'+
+        '<li>"Add to Home screen" የሚለውን ምረጥ</li>'+
+        '<li>"Add" ን ንካ — አዶው ወዲያውኑ ይታያል</li>'+
+      '</ol>'+
+    '</div>' : '')+
+
+    '<div class="card">'+
+      '<div class="row" style="justify-content:space-between;align-items:center">'+
+        '<div class="row" style="gap:14px">'+
+          '<span class="pill gold" style="font-size:.9rem">ደረጃ '+g.level+'</span>'+
+          '<span class="pill" style="font-size:.9rem">🔥 '+g.streak+' ቀን ተከታታይ</span>'+
+        '</div>'+
+        '<span class="muted num" style="font-size:.8rem">'+g.xp+' XP</span>'+
+      '</div>'+
+      '<div style="height:8px;border-radius:99px;background:var(--border);overflow:hidden;margin-top:10px">'+
+        '<div style="height:100%;width:'+Math.round(g.levelProgress*100)+'%;background:var(--accent)"></div>'+
+      '</div>'+
+      '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:12px">'+
+        g.badges.map(function(b){
+          return '<span class="pill'+(b.earned?" success":"")+'" style="'+(b.earned?"":"opacity:.45")+'">'+b.label+'</span>';
+        }).join("")+
+      '</div>'+
+    '</div>'+
+
+    '<div class="grid2">'+
+      '<div class="card">'+
+        '<h2>የዛሬ ትኩረት</h2>'+
+        (todays.length ? '<div class="row">'+todays.map(function(c){return '<span class="pill">'+courseName(c)+'</span>';}).join("")+'</div><p class="muted" style="margin-top:8px">'+DOW_DUR[key]+'</p>'
+          : '<p class="muted">ለዛሬ የታቀደ የትምህርት ክፍለ ጊዜ የለም።</p>')+
+        '<div class="row" style="margin-top:10px"><button class="btn" id="homeStartTimer" type="button">⏱ ጥናት ጀምር</button><button class="btn ghost" id="homeEditSched" type="button">ሰሌዳ ክፈት</button></div>'+
+      '</div>'+
+      '<div class="card">'+
+        '<h2>አጭር እይታ</h2>'+
+        '<div class="statrow">'+
+          '<div class="stat"><div class="n num">'+minutesToday+'</div><div class="l">ደቂቃ ዛሬ የተጠናከረ</div></div>'+
+          '<div class="stat"><div class="n num">'+pendingTasks.length+'</div><div class="l">ያልተጠናቀቁ ተግባራት</div></div>'+
+          '<div class="stat"><div class="n num" style="color:'+(overdue?"var(--danger)":"inherit")+'">'+overdue+'</div><div class="l">ጊዜ ያለፈባቸው</div></div>'+
+        '</div>'+
+        '<hr>'+
+        '<p class="muted" style="margin-bottom:4px">ግብ፦ ይህ ሴሚስተር 4.00 GPA</p>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="card">'+
+      '<div class="row" style="justify-content:space-between"><h2 style="margin:0">በቅርቡ የሚያልቁ ተግባራት</h2><a href="#tasks" style="font-size:.85rem">ሁሉንም ይመልከቱ →</a></div>'+
+      (pendingTasks.length ? pendingTasks.slice(0,4).map(function(t){
+        var late = t.due < todayISO();
+        return '<div class="tasklite"><span>'+escapeHtml(t.title)+' <span class="muted">· '+courseShort(t.course)+'</span></span>'+
+               '<span class="pill '+(late?"danger":"")+'">'+formatDateShort(t.due)+'</span></div>';
+      }).join("") : '<p class="muted">ምንም ያልተጠናቀቀ ተግባር የለም 🎉</p>')+
+    '</div>';
+
+  document.getElementById("homeStartTimer").addEventListener("click", function(){ navigate("timer"); });
+  document.getElementById("homeEditSched").addEventListener("click", function(){ navigate("schedule"); });
+  var instDismiss=document.getElementById("installDismiss");
+  if(instDismiss) instDismiss.addEventListener("click", function(){ dismissInstall(); renderHome(pane); });
+}
+function greetingWord(){
+  var h=new Date().getHours();
+  if(h<6) return "ማታ አመሸህ";
+  if(h<12) return "እንደምን አደርክ";
+  if(h<17) return "እንደምን ዋልክ";
+  return "እንደምን አመሸህ";
+}
+function formatDate(d){
+  var months=["ጥር","የካቲት","መጋቢት","ሚያዝያ","ግንቦት","ሰኔ","ሐምሌ","ነሐሴ","መስከረም","ጥቅምት","ህዳር","ታኅሳስ"];
+  // Simple Gregorian label (not an Ethiopian-calendar conversion) for readability.
+  var g=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  return d.getDate()+" "+g[d.getMonth()]+" "+d.getFullYear();
+}
+function formatDateShort(iso){
+  var d=new Date(iso+"T00:00:00");
+  var g=["ጃን","ፌብ","ማር","ኤፕ","ሜይ","ጁን","ጁላ","ኦገ","ሴፕ","ኦክ","ኖቭ","ዲሴ"];
+  return d.getDate()+" "+g[d.getMonth()];
+}
+function escapeHtml(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+/* ---------------- SCHEDULE ---------------- */
+function renderSchedule(pane){
+  pane.innerHTML =
+    '<div><div class="eyebrow">ሳምንታዊ እቅድ</div><h1>የጥናት ሰሌዳ</h1><p class="muted">የታቀደ ስርጭት፤ እያንዳንዱን ሳጥን በመቀየር ማስተካከል ትችላለህ — የትምህርት ፅንሰ-ሀሳብ ኮርሶች ከ Linear Algebra ጋር እንዲጣመሩ ተደርጓል።</p></div>'+
+    '<div class="card" style="overflow-x:auto">'+
+      '<table class="sched"><thead><tr><th>ቀን</th><th>ክፍለ ጊዜ</th><th>ርዕሰ ጉዳዮች</th></tr></thead><tbody id="schedBody"></tbody></table>'+
+    '</div>'+
+    '<div class="row"><button class="btn ghost sm" id="schedReset" type="button">ወደ ነባሪ ሰሌዳ መልስ</button></div>';
+
+  var body=document.getElementById("schedBody");
+  DOW.forEach(function(day){
+    var tr=document.createElement("tr");
+    var tdDay=document.createElement("td"); tdDay.className="day"; tdDay.textContent=DOW_LABEL[day];
+    var tdDur=document.createElement("td"); tdDur.className="durnote"; tdDur.textContent=DOW_DUR[day];
+    var tdSlots=document.createElement("td");
+    var wrap=document.createElement("div"); wrap.className="slotwrap";
+    var n=SLOT_COUNT[day];
+    var vals=state.schedule[day]||[];
+    for(var i=0;i<n;i++){
+      (function(i){
+        var sel=document.createElement("select");
+        var opt0=document.createElement("option"); opt0.value="FREE"; opt0.textContent="ነፃ"; sel.appendChild(opt0);
+        COURSES.forEach(function(c){
+          var o=document.createElement("option"); o.value=c.id; o.textContent=c.id;
+          sel.appendChild(o);
+        });
+        sel.value = vals[i]||"FREE";
+        sel.title = courseName(sel.value);
+        sel.addEventListener("change", function(){
+          var arr = state.schedule[day].slice(0,n);
+          while(arr.length<n) arr.push("FREE");
+          arr[i]=sel.value;
+          state.schedule[day]=arr;
+          sel.title=courseName(sel.value);
+          saveState();
+        });
+        wrap.appendChild(sel);
+      })(i);
+    }
+    tdSlots.appendChild(wrap);
+    tr.appendChild(tdDay); tr.appendChild(tdDur); tr.appendChild(tdSlots);
+    body.appendChild(tr);
+  });
+
+  document.getElementById("schedReset").addEventListener("click", function(){
+    state.schedule = defaultState().schedule;
+    saveState(); render();
+    toast("ሰሌዳው ወደ ነባሪው ተመልሷል");
+  });
+}
+
+/* ---------------- TIMER ---------------- */
+var timerState = { running:false, remaining:25*60, total:25*60, mode:"work", sessionsToday:0, courseId:"" };
+var timerInterval=null;
+var audioCtx=null;
+
+function beep(){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    [0,0.18,0.36].forEach(function(t){
+      var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type="sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, audioCtx.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+t+0.16);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(audioCtx.currentTime+t); o.stop(audioCtx.currentTime+t+0.2);
+    });
+  }catch(e){}
+}
+function vibrateAlarm(){
+  try{ if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]); }catch(e){}
+}
+var wakeLock=null;
+function requestWake(){
+  try{ if(navigator.wakeLock){ navigator.wakeLock.request("screen").then(function(w){ wakeLock=w; }).catch(function(){}); } }catch(e){}
+}
+function releaseWake(){
+  try{ if(wakeLock){ wakeLock.release(); wakeLock=null; } }catch(e){}
+}
+function notify(title, body){
+  try{
+    if(window.Notification && Notification.permission==="granted"){
+      new Notification(title, {body:body});
+    }
+  }catch(e){}
+}
+function startTimerTick(){
+  timerInterval = setInterval(function(){
+    if(!timerState.running) return;
+    timerState.remaining--;
+    if(timerState.remaining<=0){
+      timerState.running=false;
+      releaseWake();
+      beep();
+      vibrateAlarm();
+      if(timerState.mode==="work"){
+        timerState.sessionsToday++;
+        state.stats.totalSessions=(state.stats.totalSessions||0)+1;
+        var mins = Math.round(timerState.total/60);
+        state.focus[todayISO()] = (state.focus[todayISO()]||0)+mins;
+        saveState();
+        notify("ጊዜው አልቋል!", "የ"+mins+" ደቂቃ ጥናት ጨርሰሃል። እረፍት ውሰድ።");
+        toast("🎉 የጥናት ክፍለ ጊዜ ተጠናቋል — "+mins+" ደቂቃ ተመዝግቧል");
+        checkNewBadges();
+      } else {
+        notify("እረፍት አለቀ", "ወደ ጥናት ለመመለስ ዝግጁ ነህ?");
+        toast("እረፍት አለቀ — ቀጣይ ክፍለ ጊዜ ለመጀመር ዝግጁ ነህ?");
+      }
+    }
+    if(document.getElementById("timerTime")) updateTimerUI();
+  },1000);
+}
+function updateTimerUI(){
+  var el=document.getElementById("timerTime");
+  if(!el) return;
+  var m=Math.floor(timerState.remaining/60), s=timerState.remaining%60;
+  el.textContent = pad(m)+":"+pad(s);
+  var pct = 1 - (timerState.remaining/timerState.total);
+  var circ = 2*Math.PI*100;
+  var fg=document.getElementById("timerRingFg");
+  if(fg) fg.style.strokeDashoffset = circ*(1-pct);
+  var btn=document.getElementById("timerToggle");
+  if(btn) btn.textContent = timerState.running ? "⏸ አቁም" : "▶ ጀምር";
+  var sess=document.getElementById("timerSessions");
+  if(sess) sess.textContent = timerState.sessionsToday;
+  var minsEl=document.getElementById("timerMinsToday");
+  if(minsEl) minsEl.textContent = state.focus[todayISO()]||0;
+}
+
+function setTimerLength(workMin, breakMin, label){
+  timerState.workLen=workMin*60; timerState.breakLen=breakMin*60;
+  timerState.mode="work"; timerState.remaining=workMin*60; timerState.total=workMin*60;
+  timerState.running=false;
+  renderTimerPresetState(label);
+  updateTimerUI();
+}
+var currentPreset="25/5";
+function renderTimerPresetState(label){
+  currentPreset=label;
+  document.querySelectorAll(".preset").forEach(function(b){
+    b.setAttribute("aria-pressed", b.dataset.label===label ? "true":"false");
+  });
+}
+
+function renderTimer(pane){
+  pane.innerHTML =
+    '<div><div class="eyebrow">ትኩረት</div><h1>ሰዓት ቆጣሪ</h1><p class="muted">Pomodoro ዘዴ፦ አተኩረህ ጥናት፣ ከዚያ አጭር እረፍት። ገጹ ክፍት እስካለ ድረስ በድምፅ፣ በንዝረት (Android ላይ) እና browser notification ያስጠነቅቃል። <strong>ማሳሰቢያ፦</strong> ይህ የስልክህን ራሱን Alarm መተካት አይችልም፤ ገጹ ተዘግቶ ከሆነ ምንም አያስጠነቅቅም — ለዋስትና የስልክህን alarm ደግመህ አስቀምጥ። ለፈጣን መዳረሻ ግን ይህን ወደ ቤት ገጽህ መጨመር ትችላለህ (መነሻ ገጽ ላይ ይመልከቱ)።</p></div>'+
+    '<div class="card">'+
+      '<div class="row" style="justify-content:center;margin-bottom:6px">'+
+        '<select id="timerCourse" style="min-width:200px"></select>'+
+      '</div>'+
+      '<div class="timerwrap">'+
+        '<div class="ring"><svg viewBox="0 0 220 220">'+
+          '<circle class="bgc" cx="110" cy="110" r="100"/>'+
+          '<circle class="fgc" id="timerRingFg" cx="110" cy="110" r="100" stroke-dasharray="'+(2*Math.PI*100)+'"/>'+
+        '</svg><div class="time num" id="timerTime">25:00</div></div>'+
+        '<div class="presetrow">'+
+          '<button class="preset" data-label="25/5" type="button">25 · 5</button>'+
+          '<button class="preset" data-label="50/10" type="button">50 · 10</button>'+
+          '<button class="preset" data-label="15/3" type="button">15 · 3</button>'+
+        '</div>'+
+        '<div class="row">'+
+          '<button class="btn" id="timerToggle" type="button">▶ ጀምር</button>'+
+          '<button class="btn ghost" id="timerReset" type="button">↺ ዳግም አስጀምር</button>'+
+          '<button class="btn ghost" id="timerNotifyBtn" type="button">🔔 ማሳወቂያ ፍቀድ</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="statrow card">'+
+      '<div class="stat"><div class="n num" id="timerSessions">'+timerState.sessionsToday+'</div><div class="l">የተጠናቀቁ ክፍለ ጊዜያት ዛሬ</div></div>'+
+      '<div class="stat"><div class="n num" id="timerMinsToday">'+(state.focus[todayISO()]||0)+'</div><div class="l">ጠቅላላ ደቂቃ ዛሬ</div></div>'+
+    '</div>';
+
+  var sel=document.getElementById("timerCourse");
+  var optAll=document.createElement("option"); optAll.value=""; optAll.textContent="ኮርስ ሳይለይ"; sel.appendChild(optAll);
+  COURSES.forEach(function(c){ var o=document.createElement("option"); o.value=c.id; o.textContent=c.id+" — "+c.name; sel.appendChild(o); });
+  sel.value=timerState.courseId;
+  sel.addEventListener("change", function(){ timerState.courseId=sel.value; });
+
+  document.querySelectorAll(".preset").forEach(function(b){
+    b.addEventListener("click", function(){
+      var map={"25/5":[25,5],"50/10":[50,10],"15/3":[15,3]};
+      var v=map[b.dataset.label];
+      setTimerLength(v[0], v[1], b.dataset.label);
+    });
+  });
+  if(!timerState.workLen) setTimerLength(25,5,"25/5"); else renderTimerPresetState(currentPreset);
+
+  document.getElementById("timerToggle").addEventListener("click", function(){
+    timerState.running = !timerState.running;
+    if(timerState.running) requestWake(); else releaseWake();
+    updateTimerUI();
+  });
+  document.getElementById("timerReset").addEventListener("click", function(){
+    timerState.running=false;
+    timerState.remaining = timerState.mode==="work" ? timerState.workLen : timerState.breakLen;
+    timerState.total = timerState.remaining;
+    updateTimerUI();
+  });
+  document.getElementById("timerNotifyBtn").addEventListener("click", function(){
+    try{
+      if(window.Notification && Notification.requestPermission){
+        Notification.requestPermission().then(function(p){
+          toast(p==="granted" ? "ማሳወቂያ ነቅቷል" : "ማሳወቂያ አልተፈቀደም — ድምፅ ግን ይሰራል");
+        });
+      } else { toast("ይህ አሳሽ ማሳወቂያ አይደግፍም — ድምፅ ግን ይሰራል"); }
+    }catch(e){ toast("ማሳወቂያ መጠየቅ አልተቻለም"); }
+  });
+  updateTimerUI();
+}
+
+/* ---------------- TASKS ---------------- */
+var taskFilter="pending";
+function renderTasks(pane){
+  pane.innerHTML =
+    '<div><div class="eyebrow">ክትትል</div><h1>ተግባራት</h1><p class="muted">የምደባ እና ፈተና ቀነ-ገደቦችን እዚህ ይከታተሉ።</p></div>'+
+    '<div class="card">'+
+      '<div class="addform">'+
+        '<input type="text" id="taskTitle" placeholder="የተግባር ርዕስ (ምሳሌ፦ Quiz 1 Linear Algebra)">'+
+        '<select id="taskCourse"></select>'+
+        '<input type="date" id="taskDue">'+
+        '<select id="taskPriority"><option value="low">ዝቅተኛ</option><option value="med" selected>መካከለኛ</option><option value="high">ከፍተኛ</option></select>'+
+        '<button class="btn" id="taskAdd" type="button">+ ጨምር</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="row filterrow">'+
+      '<button data-f="pending" type="button">ያልተጠናቀቁ</button>'+
+      '<button data-f="done" type="button">የተጠናቀቁ</button>'+
+      '<button data-f="all" type="button">ሁሉም</button>'+
+    '</div>'+
+    '<div class="tasklist" id="taskList"></div>';
+
+  var csel=document.getElementById("taskCourse");
+  COURSES.forEach(function(c){ var o=document.createElement("option"); o.value=c.id; o.textContent=c.id; csel.appendChild(o); });
+  document.getElementById("taskDue").value = addDays(3);
+
+  document.querySelectorAll(".filterrow button").forEach(function(b){
+    b.setAttribute("aria-pressed", b.dataset.f===taskFilter ? "true":"false");
+    b.addEventListener("click", function(){ taskFilter=b.dataset.f; renderTasks(pane); });
+  });
+
+  document.getElementById("taskAdd").addEventListener("click", function(){
+    var title=document.getElementById("taskTitle").value.trim();
+    if(!title){ toast("እባክህ የተግባር ርዕስ ጻፍ"); return; }
+    state.tasks.push({
+      id:uid(), title:title, course:csel.value, due:document.getElementById("taskDue").value||todayISO(),
+      priority:document.getElementById("taskPriority").value, done:false
+    });
+    saveState();
+    renderTasks(pane);
+    toast("ተግባር ታክሏል");
+  });
+
+  var list=document.getElementById("taskList");
+  var items = state.tasks.filter(function(t){
+    if(taskFilter==="pending") return !t.done;
+    if(taskFilter==="done") return t.done;
+    return true;
+  }).sort(function(a,b){ return a.due<b.due?-1:1; });
+
+  if(!items.length){
+    list.innerHTML='<p class="muted">ምንም ነገር የለም።</p>';
+    return;
+  }
+  items.forEach(function(t){
+    var row=document.createElement("div");
+    row.className="taskrow"+(t.done?" done":"");
+    var late = !t.done && t.due<todayISO();
+    row.innerHTML =
+      '<button class="chk'+(t.done?" on":"")+'" type="button" aria-label="ተጠናቋል"></button>'+
+      '<div class="body">'+
+        '<div class="title">'+escapeHtml(t.title)+(t.example?' <span class="pill gold">ምሳሌ</span>':'')+'</div>'+
+        '<div class="meta"><span>'+courseShort(t.course)+'</span><span class="'+(late?"":"")+'" style="color:'+(late?"var(--danger)":"inherit")+'">'+formatDateShort(t.due)+(late?" · አልፏል":"")+'</span>'+
+          '<span class="pill '+(t.priority==="high"?"danger":t.priority==="low"?"":"gold")+'">'+({low:"ዝቅተኛ",med:"መካከለኛ",high:"ከፍተኛ"})[t.priority]+'</span></div>'+
+      '</div>'+
+      '<button class="del" type="button" aria-label="ሰርዝ">✕</button>';
+    row.querySelector(".chk").addEventListener("click", function(){
+      t.done=!t.done;
+      if(t.done) celebrate(row);
+      saveState(); renderTasks(pane); checkNewBadges();
+    });
+    row.querySelector(".del").addEventListener("click", function(){
+      var idx=state.tasks.indexOf(t);
+      state.tasks.splice(idx,1); saveState(); renderTasks(pane);
+      toast("ተግባር ተሰርዟል", function(){ state.tasks.splice(idx,0,t); saveState(); renderTasks(pane); });
+    });
+    list.appendChild(row);
+  });
+}
+
+/* ---------------- CARDS ---------------- */
+var activeDeck="MATH201";
+var cardIndex=0;
+var cardFlipped=false;
+function renderCards(pane){
+  var decks=state.decks;
+  pane.innerHTML =
+    '<div><div class="eyebrow">ድግግሞሽ</div><h1>ፍላሽ ካርዶች</h1><p class="muted">በኮርስ የተደራጁ ካርዶች — ጠቅ አድርግ መልስ ለማየት።</p></div>'+
+    '<div class="decktabs" id="deckTabs"></div>'+
+    '<div class="card" id="cardArea"></div>'+
+    '<div class="card">'+
+      '<h3>ካርድ ጨምር</h3>'+
+      '<div class="addform">'+
+        '<input type="text" id="cardQ" placeholder="ጥያቄ">'+
+        '<input type="text" id="cardA" placeholder="መልስ">'+
+        '<button class="btn sm" id="cardAdd" type="button">+ ጨምር</button>'+
+      '</div>'+
+      '<div class="cardlist" id="cardManageList"></div>'+
+    '</div>';
+
+  var tabs=document.getElementById("deckTabs");
+  COURSES.forEach(function(c){
+    var b=document.createElement("button");
+    b.className="decktab"; b.type="button"; b.textContent=c.id+" ("+ (decks[c.id]||[]).length +")";
+    b.setAttribute("aria-pressed", c.id===activeDeck?"true":"false");
+    b.addEventListener("click", function(){ activeDeck=c.id; cardIndex=0; cardFlipped=false; renderCards(pane); });
+    tabs.appendChild(b);
+  });
+
+  var deck=decks[activeDeck]||[];
+  var area=document.getElementById("cardArea");
+  if(!deck.length){
+    area.innerHTML='<p class="muted" style="margin:0">ለ'+activeDeck+' ገና ካርድ የለም። ከታች ጨምር።</p>';
+  } else {
+    if(cardIndex>=deck.length) cardIndex=0;
+    var cur=deck[cardIndex];
+    area.innerHTML =
+      '<div class="flashcard'+(cardFlipped?" flipped":"")+'" id="flashcard">'+
+        '<div class="inner">'+
+          '<div class="face front">'+escapeHtml(cur.q)+'</div>'+
+          '<div class="face back">'+escapeHtml(cur.a)+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="row" style="justify-content:center;margin-top:12px">'+
+        '<button class="btn ghost sm" id="cardPrev" type="button">← ቀዳሚ</button>'+
+        '<span class="muted num">'+(cardIndex+1)+' / '+deck.length+'</span>'+
+        '<button class="btn ghost sm" id="cardNext" type="button">ቀጣይ →</button>'+
+      '</div>';
+    document.getElementById("flashcard").addEventListener("click", function(){
+      cardFlipped=!cardFlipped;
+      document.getElementById("flashcard").classList.toggle("flipped", cardFlipped);
+      if(cardFlipped){ state.stats.cardReviews=(state.stats.cardReviews||0)+1; saveState(); }
+    });
+    document.getElementById("cardPrev").addEventListener("click", function(e){
+      e.stopPropagation(); cardIndex=(cardIndex-1+deck.length)%deck.length; cardFlipped=false; renderCards(pane);
+    });
+    document.getElementById("cardNext").addEventListener("click", function(e){
+      e.stopPropagation(); cardIndex=(cardIndex+1)%deck.length; cardFlipped=false; renderCards(pane);
+    });
+  }
+
+  var mlist=document.getElementById("cardManageList");
+  deck.forEach(function(c,i){
+    var row=document.createElement("div"); row.className="cardlistitem";
+    row.innerHTML='<span>'+escapeHtml(c.q)+'</span><button class="del" type="button" aria-label="ሰርዝ">✕</button>';
+    row.querySelector(".del").addEventListener("click", function(){
+      deck.splice(i,1); saveState(); renderCards(pane);
+    });
+    mlist.appendChild(row);
+  });
+
+  document.getElementById("cardAdd").addEventListener("click", function(){
+    var q=document.getElementById("cardQ").value.trim();
+    var a=document.getElementById("cardA").value.trim();
+    if(!q||!a){ toast("ጥያቄና መልስ ሁለቱንም ጻፍ"); return; }
+    decks[activeDeck]=decks[activeDeck]||[];
+    decks[activeDeck].push({q:q,a:a});
+    saveState();
+    renderCards(pane);
+    toast("ካርድ ታክሏል");
+  });
+}
+
+/* ---------------- MATERIALS (PDF handouts / slides, synced to your account) ---------------- */
+var materialCourseFilter="ALL";
+var EXT_TYPE={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",txt:"text/plain",md:"text/markdown",csv:"text/csv"};
+
+function renderMaterials(pane){
+  pane.innerHTML =
+    '<div><div class="eyebrow">ማህደር</div><h1>ማቴሪያሎች</h1><p class="muted">PDF handout እና ስላይድ እዚህ አስቀምጥ — ከየትኛውም መሳሪያ ስትገባ ይገኛል። <strong>PPT ወይም Word ፋይል ካለህ መጀመሪያ እንደ PDF Export/Save አድርገው ከዚያ ስቀል</strong> (pptx/docx በቀጥታ አይደገፍም)።</p></div>'+
+    '<div class="decktabs" id="matTabs"></div>'+
+    '<div class="card">'+
+      '<h3 style="margin-top:0">ፋይል ስቀል</h3>'+
+      '<div class="addform">'+
+        '<input type="text" id="matTitle" placeholder="ርዕስ (ለምሳሌ፦ Chapter 3 Slides)">'+
+        '<select id="matCourse"></select>'+
+        '<input type="file" id="matFile" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.txt,.md,.csv">'+
+        '<button class="btn sm" id="matUpload" type="button">⬆ ስቀል</button>'+
+      '</div>'+
+      '<p class="muted" id="matStatus" style="margin:8px 0 0;font-size:.82rem"></p>'+
+    '</div>'+
+    '<div class="tasklist" id="matList"></div>';
+
+  var tabs=document.getElementById("matTabs");
+  var allBtn=document.createElement("button");
+  allBtn.className="decktab"; allBtn.type="button"; allBtn.textContent="ሁሉም";
+  allBtn.setAttribute("aria-pressed", materialCourseFilter==="ALL"?"true":"false");
+  allBtn.addEventListener("click", function(){ materialCourseFilter="ALL"; renderMaterials(pane); });
+  tabs.appendChild(allBtn);
+  COURSES.forEach(function(c){
+    var b=document.createElement("button");
+    b.className="decktab"; b.type="button"; b.textContent=c.id;
+    b.setAttribute("aria-pressed", materialCourseFilter===c.id?"true":"false");
+    b.addEventListener("click", function(){ materialCourseFilter=c.id; renderMaterials(pane); });
+    tabs.appendChild(b);
+  });
+
+  var csel=document.getElementById("matCourse");
+  COURSES.forEach(function(c){ var o=document.createElement("option"); o.value=c.id; o.textContent=c.id; csel.appendChild(o); });
+
+  var statusEl=document.getElementById("matStatus");
+  var uploadBtn=document.getElementById("matUpload");
+
+  if(!capsReady){
+    statusEl.textContent="በመጫን ላይ...";
+    uploadBtn.disabled=true;
+  } else if(!assetsCap || !dbCap){
+    statusEl.textContent="ይህ ባህሪ አሁን አይገኝም (ፋይል ማስቀመጫ አልነቃም)።";
+    uploadBtn.disabled=true;
+  } else {
+    uploadBtn.addEventListener("click", function(){ uploadMaterial(statusEl); });
+    subscribeMaterials();
+  }
+  renderMaterialsList();
+}
+
+function uploadMaterial(statusEl){
+  var fileInput=document.getElementById("matFile");
+  var file=fileInput.files && fileInput.files[0];
+  if(!file){ toast("እባክህ ፋይል ምረጥ"); return; }
+  var ext=(file.name.split(".").pop()||"").toLowerCase();
+  if(!EXT_TYPE[ext]){
+    toast("ይህ የፋይል አይነት አይደገፍም። PPT/Word ካለህ መጀመሪያ እንደ PDF Export/Save አድርግ።");
+    return;
+  }
+  var title=document.getElementById("matTitle").value.trim() || file.name;
+  var course=document.getElementById("matCourse").value;
+  statusEl.textContent="በመስቀል ላይ...";
+  assetsCap.upload(file, {type:EXT_TYPE[ext]}).then(function(res){
+    return dbCap.collection("materials").add({
+      title:title, course:course, assetId:res.id, contentType:res.contentType,
+      sizeBytes:res.sizeBytes, createdAt:new Date().toISOString()
+    });
+  }).then(function(){
+    statusEl.textContent="";
+    document.getElementById("matTitle").value="";
+    fileInput.value="";
+    toast("ተስቀሏል፦ "+title);
+  }).catch(function(err){
+    statusEl.textContent="";
+    toast(err && err.code==="too_large" ? "ፋይሉ በጣም ትልቅ ነው (ከ20MB በላይ)" : "መስቀል አልተቻለም፣ እንደገና ሞክር");
+  });
+}
+
+function subscribeMaterials(){
+  if(materialsUnsub) return;
+  materialsUnsub=dbCap.collection("materials").orderBy("createdAt","desc").onSnapshot(function(snap){
+    materialsCache=snap.docs.map(function(d){ var v=d.data()||{}; v.id=d.id; return v; });
+    if(currentRoute()==="materials") renderMaterialsList();
+  }, function(){});
+}
+
+function renderMaterialsList(){
+  var list=document.getElementById("matList");
+  if(!list) return;
+  if(!capsReady || !dbCap){ list.innerHTML=""; return; }
+  var items=materialsCache.filter(function(m){ return materialCourseFilter==="ALL" || m.course===materialCourseFilter; });
+  if(!items.length){ list.innerHTML='<p class="muted">ምንም ፋይል የለም። ከላይ ስቀል።</p>'; return; }
+  list.innerHTML="";
+  items.forEach(function(m){
+    var row=document.createElement("div"); row.className="taskrow";
+    var kb=m.sizeBytes ? Math.round(m.sizeBytes/1024)+" KB" : "";
+    var when=m.createdAt ? formatDateShort(m.createdAt.slice(0,10)) : "";
+    row.innerHTML=
+      '<div class="body">'+
+        '<div class="title">'+escapeHtml(m.title||"")+'</div>'+
+        '<div class="meta"><span class="pill">'+courseShort(m.course)+'</span><span>'+kb+'</span><span>'+when+'</span></div>'+
+      '</div>'+
+      '<a class="btn ghost sm" href="/_blob/'+m.assetId+'" target="_blank" rel="noopener">ክፈት</a>'+
+      '<button class="del" type="button" aria-label="ሰርዝ">✕</button>';
+    row.querySelector(".del").addEventListener("click", function(){
+      if(dbCap) dbCap.collection("materials").doc(m.id).delete().catch(function(){});
+      if(assetsCap && m.assetId) assetsCap.delete(m.assetId).catch(function(){});
+      toast("ፋይል ተሰርዟል");
+    });
+    list.appendChild(row);
+  });
+}
+
+/* ---------------- CALENDAR ---------------- */
+var calCursor=new Date(); calCursor.setDate(1);
+var calSelected=todayISO();
+function renderCalendar(pane){
+  pane.innerHTML =
+    '<div><div class="eyebrow">እይታ</div><h1>ካላንደር</h1><p class="muted">ነጥብ ያለበት ቀን የተግባር ማብቂያ ቀን አለው።</p></div>'+
+    '<div class="card">'+
+      '<div class="calhead"><button class="btn ghost sm" id="calPrev" type="button">←</button><h2 id="calLabel" style="margin:0"></h2><button class="btn ghost sm" id="calNext" type="button">→</button></div>'+
+      '<div class="calgrid" id="calGrid"></div>'+
+    '</div>'+
+    '<div class="card"><h3 id="calSelLabel"></h3><div id="calSelTasks"></div></div>';
+
+  document.getElementById("calPrev").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(pane); });
+  document.getElementById("calNext").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(pane); });
+
+  var gMonths=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("calLabel").textContent = gMonths[calCursor.getMonth()]+" "+calCursor.getFullYear();
+
+  var grid=document.getElementById("calGrid");
+  ["ሰ","ማ","ረ","ሐ","አ","ቅ","እ"].forEach(function(d){
+    var h=document.createElement("div"); h.className="dow"; h.textContent=d; grid.appendChild(h);
+  });
+  var first=new Date(calCursor.getFullYear(), calCursor.getMonth(), 1);
+  var startPad=(first.getDay()+6)%7; // Monday-start
+  var daysInMonth=new Date(calCursor.getFullYear(), calCursor.getMonth()+1, 0).getDate();
+  var tasksByDate={};
+  state.tasks.forEach(function(t){ tasksByDate[t.due]=(tasksByDate[t.due]||[]); tasksByDate[t.due].push(t); });
+
+  for(var i=0;i<startPad;i++){ var pad=document.createElement("div"); pad.className="calcell pad"; grid.appendChild(pad); }
+  for(var d=1; d<=daysInMonth; d++){
+    var iso=calCursor.getFullYear()+"-"+pad2(calCursor.getMonth()+1)+"-"+pad2(d);
+    var cell=document.createElement("div");
+    cell.className="calcell"+(iso===todayISO()?" today":"")+(iso===calSelected?" sel":"");
+    cell.innerHTML = d + (tasksByDate[iso] ? '<span class="dot"></span>' : '');
+    cell.addEventListener("click", function(iso){ return function(){ calSelected=iso; renderCalendar(pane); }; }(iso));
+    grid.appendChild(cell);
+  }
+
+  var selLabel=document.getElementById("calSelLabel");
+  var selTasks=document.getElementById("calSelTasks");
+  selLabel.textContent = calSelected===todayISO() ? "ዛሬ" : formatDateShort(calSelected);
+  var list=tasksByDate[calSelected]||[];
+  selTasks.innerHTML = list.length ? list.map(function(t){
+    return '<div class="tasklite"><span>'+escapeHtml(t.title)+' <span class="muted">· '+courseShort(t.course)+'</span></span>'+(t.done?'<span class="pill success">ተጠናቋል</span>':'<span class="pill">ይጠበቃል</span>')+'</div>';
+  }).join("") : '<p class="muted">በዚህ ቀን ምንም የሚያልቅ ተግባር የለም።</p>';
+}
+function pad2(n){ return n<10?"0"+n:""+n; }
+
+})();
+</script>
