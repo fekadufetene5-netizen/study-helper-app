@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="am"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>የጥናት ጓደኛ</title>
+<style>
+:root{--ink:#0E3B43;--ink2:#2B6777;--gold:#F6B719;--bg:#EEF5F3;--card:#fff;--tx:#10262B;--mute:#587178;--ok:#1E9E6A;--bad:#E4572E}
+@media(prefers-color-scheme:dark){:root{--bg:#0A1F24;--card:#12323A;--tx:#EAF4F2;--mute:#9DBBC1}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Noto Sans Ethiopic","Nyala",system-ui,sans-serif;font-weight:700;font-size:17px;line-height:1.5;padding-bottom:96px}
+header{background:var(--ink);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 20px) 20px 26px;border-radius:0 0 34px 34px}
+header small{display:block;color:var(--gold);font-size:16px}
+header h1{margin:2px 0 0;font-size:32px;font-weight:900}
+.streak{margin-top:12px;display:inline-block;background:var(--gold);color:var(--ink);border-radius:30px;padding:5px 16px;font-weight:900}
+main{padding:14px 14px}
+h2{font-size:24px;font-weight:900;margin:20px 0 10px}
+.card{background:var(--card);border-radius:20px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px rgba(14,59,67,.12)}
+.reco{background:var(--ink2);color:#fff;border-left:10px solid var(--gold)}
+.reco b{font-size:22px;font-weight:900;display:block}
+input,select,textarea{width:100%;font:inherit;font-weight:700;padding:12px;border-radius:14px;border:2.5px solid var(--ink2);background:var(--card);color:var(--tx);margin:5px 0}
+textarea{min-height:90px}
+button{font:inherit;font-weight:900;border:0;border-radius:16px;padding:12px 18px;background:var(--gold);color:var(--ink);font-size:18px}
+button.sec{background:var(--ink2);color:#fff}
+button.x{background:none;color:var(--bad);padding:4px 10px;font-size:22px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.row>button{flex:none}
+.task{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:2px dashed rgba(88,113,120,.3)}
+.task:last-child{border:0}
+.chk{width:32px;height:32px;flex:none;accent-color:var(--ok)}
+.done span{text-decoration:line-through;color:var(--mute)}
+.bar{height:14px;border-radius:10px;background:rgba(88,113,120,.25);overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:10px;transition:width .4s}
+.tag{display:inline-block;background:var(--gold);color:var(--ink);border-radius:10px;padding:1px 10px;font-size:14px;font-weight:900;margin-right:6px}
+.mute{color:var(--mute);font-size:15px}
+.stars button{background:var(--card);border:2.5px solid var(--gold);padding:8px 0;flex:1;font-size:22px}
+.stars button.on{background:var(--gold)}
+.big{font-size:68px;font-weight:900;text-align:center;margin:10px 0;color:var(--ink2);font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;margin-bottom:6px}.chips button{flex:1;padding:9px 0;font-size:16px;background:var(--card);border:2.5px solid var(--gold)}.chips button.on{background:var(--gold)}
+.bars{display:flex;align-items:flex-end;gap:6px;height:150px;margin-top:8px}
+.bars div{flex:1;text-align:center;font-size:13px;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.bars i{display:block;background:var(--ok);border-radius:8px 8px 0 0;min-height:3px}
+.slot{display:flex;gap:10px;align-items:center;padding:6px 0}.slot b{width:58px;flex:none;color:var(--ink2);font-weight:900}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--ink);display:flex;padding:6px 4px calc(env(safe-area-inset-bottom,0px) + 6px)}
+nav button{flex:1;background:none;color:#fff;font-size:12px;padding:5px 0;border-radius:14px}
+nav button span{display:block;font-size:22px}
+nav button.on{background:var(--gold);color:var(--ink)}
+.empty{text-align:center;color:var(--mute);padding:16px}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;color:#fff;text-align:center}
+#ov img,#ov video{max-width:100%;max-height:70vh}
+</style></head><body>
+<header><small id="date"></small><h1>የጥናት ጓደኛ</h1><div class="streak" id="streak"></div></header>
+<main id="app"></main>
+<nav>
+<button data-t="today" class="on"><span>✅</span>ዛሬ</button>
+<button data-t="timer"><span>⏱</span>ቆጣሪ</button>
+<button data-t="plan"><span>📅</span>ፕሮግራም</button>
+<button data-t="notes"><span>📝</span>ማስታወሻ</button>
+<button data-t="mat"><span>📚</span>ማቴሪያል</button>
+<button data-t="rep"><span>📊</span>ሪፖርት</button>
+</nav>
+<script>
+let D={subjects:[],mats:[],days:{},log:{},notes:[],wk:{},pc:{f:25,b:5,l:15}};
+try{const s=localStorage.getItem("sc2");if(s)Object.assign(D,JSON.parse(s))}catch(e){}
+const save=()=>{try{localStorage.setItem("sc2",JSON.stringify(D))}catch(e){}};
+const $=i=>document.getElementById(i),pad=n=>(n<10?"0":"")+n;
+const key=(d=new Date())=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const pd=s=>{const a=s.split("-");return new Date(+a[0],a[1]-1,+a[2])};
+const dl=x=>x?Math.round((pd(x)-pd(key()))/864e5):null;
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const WD=["እሑድ","ሰኞ","ማክሰኞ","ረቡዕ","ሐሙስ","አርብ","ቅዳሜ"],ORD=[1,2,3,4,5,6,0];
+const EM=["መስከረም","ጥቅምት","ኅዳር","ታኅሣሥ","ጥር","የካቲት","መጋቢት","ሚያዝያ","ግንቦት","ሰኔ","ሐምሌ","ነሐሴ","ጳጉሜ"];
+function es(d){const a=Math.floor((14-(d.getMonth()+1))/12),y=d.getFullYear()+4800-a,m=d.getMonth()+1+12*a-3;
+ const j=d.getDate()+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045;
+ const r=(j-1723856)%1461,n=r%365+365*Math.floor(r/1460);
+ return EM[Math.floor(n/30)]+" "+(n%30+1)+"፣ "+(4*Math.floor((j-1723856)/1461)+Math.floor(r/365)-Math.floor(r/1460))}
+const TY={pdf:"📄 PDF",ppt:"📊 PPT",video:"🎬 ቪዲዮ",audio:"🎧 ኦዲዮ",img:"🖼 ምስል",link:"🔗 ሊንክ",other:"📁 ሌላ"};
+let tab="today",nsel="";
+const today=()=>D.days[key()]||(D.days[key()]={tasks:[],rate:0,note:""});
+const mins=s=>{let t=0;for(const k in D.log)t+=D.log[k][s]||0;return t};
+const dayMin=k=>{let t=0;const o=D.log[k]||{};for(const s in o)t+=o[s];return t};
+const fmt=m=>m>=60?Math.floor(m/60)+"ሰ "+(m%60)+"ደ":m+"ደ";
+function addLog(s,m){const k=key();D.log[k]=D.log[k]||{};s=s||"ሌላ";D.log[k][s]=(D.log[k][s]||0)+m}
+function streak(){let n=0;const d=new Date();for(let i=0;i<365;i++){const t=D.days[key(d)];if(t&&t.tasks.length&&t.tasks.every(x=>x.d))n++;else if(i>0||(t&&t.tasks.length))break;d.setDate(d.getDate()-1)}return n}
+function rec(){let b=null,m=-1e9;D.subjects.forEach(s=>{const d=dl(s.exam);let v=s.pri*10-Math.min(mins(s.name)/60,20);if(d!==null)v+=d<0?-50:Math.max(0,40-d);if(v>m){m=v;b=s}});return b}
+const subOpts=(sel,all)=>(all?'<option value="">'+all+'</option>':'')+D.subjects.map(s=>'<option'+(s.name==sel?' selected':'')+'>'+esc(s.name)+'</option>').join("");
+function head(){const d=new Date();$("date").textContent=WD[d.getDay()]+"፣ "+es(d)+" · "+d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear();$("streak").textContent="🔥 "+streak()+" ቀን ተከታታይ"}
+
+/* Pomodoro */
+const dur=m=>D.pc[m]*60;
+const P={m:"f",run:0,end:0,left:dur("f"),subj:"",n:0};
+function beep(){try{navigator.vibrate&&navigator.vibrate([300,100,300])}catch(e){}try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator();o.connect(c.destination);o.start();setTimeout(()=>o.stop(),700)}catch(e){}}
+function finish(){P.run=0;beep();if(P.m=="f"){addLog(P.subj,D.pc.f);P.n++;P.m=P.n%4==0?"l":"b"}else P.m="f";P.left=dur(P.m);save();render()}
+setInterval(()=>{if(P.run){P.left=Math.max(0,Math.round((P.end-Date.now())/1000));if(P.left<=0)return finish()}const e=$("tm");if(e)e.textContent=pad(Math.floor(P.left/60))+":"+pad(P.left%60)},500);
+const pStart=()=>{if(P.run)P.run=0;else{P.end=Date.now()+P.left*1000;P.run=1}render()};
+const pReset=()=>{P.run=0;P.left=dur(P.m);render()};
+const pMode=m=>{P.m=m;P.run=0;P.left=dur(m);render()};
+const pSet=(k,v)=>{D.pc[k]=Math.max(1,Math.min(180,+v||1));if(!P.run)P.left=dur(P.m);save();render()};
+function viewTimer(){const M={f:"ጥናት",b:"እረፍት",l:"ረጅም እረፍት"};
+ let h='<div class="card"><div class="chips">'+Object.keys(M).map(k=>'<button class="'+(P.m==k?'on':'')+'" onclick="pMode(\''+k+'\')">'+M[k]+'</button>').join("")+'</div>';
+ h+='<div class="big" id="tm">'+pad(Math.floor(P.left/60))+":"+pad(P.left%60)+'</div><select onchange="P.subj=this.value">'+subOpts(P.subj,"ትምህርት ምረጥ (አማራጭ)")+'</select>';
+ h+='<div class="row" style="margin-top:8px"><button onclick="pStart()">'+(P.run?"⏸ ቆም":"▶ ጀምር")+'</button><button class="sec" onclick="pReset()">↺ እንደገና</button></div>';
+ h+='<div class="mute" style="margin-top:10px;text-align:center">ዛሬ ያጠናኸው፦ '+fmt(dayMin(key()))+' · የተጠናቀቁ ዙሮች፦ '+P.n+'</div></div>';
+ h+='<div class="card"><div class="mute">ደቂቃዎች (ጥናት / እረፍት / ረጅም እረፍት)</div><div class="row"><input type="number" value="'+D.pc.f+'" onchange="pSet(\'f\',this.value)"><input type="number" value="'+D.pc.b+'" onchange="pSet(\'b\',this.value)"><input type="number" value="'+D.pc.l+'" onchange="pSet(\'l\',this.value)"></div><div class="mute">ጥናት ሲጠናቀቅ ሰዓቱ በራሱ ወደ ሪፖርት ይመዘገባል። ቆጣሪው ሲሄድ ገጹን አይዝጉ፤ ስልኩም እንዳይተኛ ያድርጉ።</div></div>';
+ return h}
+
+/* Today */
+function viewToday(){const t=today(),r=rec(),done=t.tasks.filter(x=>x.d).length,tot=t.tasks.length,pct=tot?Math.round(done/tot*100):0;let h="";
+ if(r){const d=dl(r.exam);h+='<div class="card reco"><span class="mute" style="color:var(--gold)">ዛሬ እንዲያጠኑ እመክራለሁ</span><b>⭐ '+esc(r.name)+'</b>'+(d!==null&&d>=0?'ፈተና ለመድረስ '+d+' ቀን ቀርቷል<br>':'')+'<button style="margin-top:10px" onclick="addTask(\''+esc(r.name)+' አጥና\',\''+esc(r.name)+'\')">ወደ ዛሬ እቅድ ጨምር</button></div>'}
+ else h+='<div class="card empty">መጀመሪያ በ«ፕሮግራም» ትር ውስጥ የትምህርት ዓይነቶችዎን ይጨምሩ።</div>';
+ const sl=D.wk[new Date().getDay()]||[];
+ if(sl.length){h+='<h2>የዛሬ ፕሮግራም</h2><div class="card">'+sl.map(x=>'<div class="slot"><b>'+esc(x.t)+'</b><span style="flex:1">'+esc(x.s)+(x.n?' · '+esc(x.n):'')+'</span><button class="sec" onclick="addTask(\''+esc(x.s)+(x.n?' - '+esc(x.n):'')+'\',\''+esc(x.s)+'\')">＋</button></div>').join("")+'</div>'}
+ h+='<h2>የዛሬ እቅድ</h2><div class="card"><div class="row"><input id="nt" placeholder="ዛሬ ምን ታጠናለህ?"><button onclick="addTask($(\'nt\').value.trim())">＋</button></div><div class="bar"><i style="width:'+pct+'%"></i></div><div class="mute">'+done+' ከ '+tot+' ተጠናቀቀ ('+pct+'%)</div>';
+ if(!tot)h+='<div class="empty">እስካሁን ምንም የለም።</div>';
+ t.tasks.forEach((x,i)=>{h+='<div class="task'+(x.d?' done':'')+'"><input type="checkbox" class="chk" '+(x.d?'checked':'')+' onchange="tog('+i+')"><span style="flex:1">'+(x.s?'<em class="tag">'+esc(x.s)+'</em>':'')+esc(x.t)+'</span><button class="x" onclick="delTask('+i+')">✕</button></div>'});
+ h+='</div><h2>የዛሬ ግምገማ</h2><div class="card"><div>ዛሬ እንዴት ነበር?</div><div class="row stars" style="margin:8px 0">';
+ for(let k=1;k<=5;k++)h+='<button class="'+(t.rate>=k?'on':'')+'" onclick="rate('+k+')">★</button>';
+ return h+'</div><textarea placeholder="ምን ተማርኩ? ምን ከበደኝ? ነገ ምን አሻሽላለሁ?" onchange="today().note=this.value;save()">'+esc(t.note)+'</textarea></div>'}
+function addTask(v,s){if(!v)return;today().tasks.push({t:v,d:0,s:s||""});save();render()}
+const tog=i=>{const x=today().tasks[i];x.d=x.d?0:1;save();render()},delTask=i=>{today().tasks.splice(i,1);save();render()},rate=k=>{today().rate=k;save();render()};
+
+/* Plan: subjects + weekly timetable */
+function viewPlan(){
+ let h='<h2>የትምህርት ዓይነቶች</h2><div class="card"><input id="sn" placeholder="የትምህርት ስም (ለምሳሌ ፊዚክስ)"><div class="row"><div><div class="mute">የፈተና ቀን</div><input id="se" type="date"></div><div><div class="mute">አስፈላጊነት</div><select id="sp"><option value="3">ከፍተኛ</option><option value="2" selected>መካከለኛ</option><option value="1">ዝቅተኛ</option></select></div></div><button style="width:100%;margin-top:8px" onclick="addSub()">ጨምር</button></div>';
+ if(!D.subjects.length)h+='<div class="empty">እስካሁን የለም።</div>';
+ D.subjects.forEach((s,i)=>{const d=dl(s.exam);h+='<div class="card"><div class="row"><div><b style="font-size:21px;font-weight:900">'+esc(s.name)+'</b><div class="mute">'+(d===null?'የፈተና ቀን አልተቀመጠም':d<0?'ፈተናው አልፏል':'ፈተና በ'+d+' ቀን ('+es(pd(s.exam))+')')+' · ያጠናሁት '+fmt(mins(s.name))+'</div></div><button class="x" onclick="delSub('+i+')">✕</button></div></div>'});
+ h+='<h2>ሳምንታዊ የጥናት ፕሮግራም</h2><div class="card"><select id="wd">'+ORD.map(d=>'<option value="'+d+'">'+WD[d]+'</option>').join("")+'</select><div class="row"><input id="wt" type="time" value="18:00"><select id="ws">'+subOpts("")+'<option>ሌላ</option></select></div><input id="wn" placeholder="ምን ታጠናለህ? (አማራጭ)"><button style="width:100%" onclick="addSlot()">ወደ ፕሮግራሙ ጨምር</button></div>';
+ ORD.forEach(d=>{const sl=D.wk[d]||[],now=d==new Date().getDay();h+='<div class="card" style="'+(now?'border:3px solid var(--gold)':'')+'"><b style="font-weight:900">'+WD[d]+(now?' · ዛሬ':'')+'</b>'+(sl.length?sl.map((x,i)=>'<div class="slot"><b>'+esc(x.t)+'</b><span style="flex:1">'+esc(x.s)+(x.n?' · '+esc(x.n):'')+'</span><button class="x" onclick="delSlot('+d+','+i+')">✕</button></div>').join(""):'<div class="mute">ምንም የለም</div>')+'</div>'});
+ return h}
+function addSub(){const n=$("sn").value.trim();if(!n)return;D.subjects.push({name:n,exam:$("se").value,pri:+$("sp").value});save();render()}
+const delSub=i=>{if(confirm("ይሰረዝ?")){D.subjects.splice(i,1);save();render()}};
+function addSlot(){const d=$("wd").value;(D.wk[d]=D.wk[d]||[]).push({t:$("wt").value||"00:00",s:$("ws").value,n:$("wn").value.trim()});D.wk[d].sort((a,b)=>a.t<b.t?-1:1);save();render()}
+const delSlot=(d,i)=>{D.wk[d].splice(i,1);save();render()};
+
+/* Notes */
+function viewNotes(){
+ let h='<h2>ማስታወሻ በትምህርት</h2><div class="card"><select id="nsub">'+subOpts(nsel,"ትምህርት ምረጥ")+'<option>ሌላ</option></select><textarea id="ntx" placeholder="ማስታወሻዎን ይጻፉ..."></textarea><button style="width:100%" onclick="addNote()">አስቀምጥ</button></div>';
+ h+='<select onchange="nsel=this.value;render()">'+subOpts(nsel,"ሁሉም ማስታወሻዎች")+'<option'+(nsel=="ሌላ"?' selected':'')+'>ሌላ</option></select>';
+ const L=D.notes.map((n,i)=>({n,i})).filter(o=>!nsel||o.n.s==nsel).reverse();
+ if(!L.length)h+='<div class="empty">ማስታወሻ የለም።</div>';
+ return h+L.map(o=>'<div class="card"><div class="row"><div><span class="tag">'+esc(o.n.s||"—")+'</span><span class="mute">'+es(new Date(o.n.d))+'</span></div><button class="x" onclick="delNote('+o.i+')">✕</button></div><div style="white-space:pre-wrap;margin-top:6px">'+esc(o.n.t)+'</div></div>').join("")}
+function addNote(){const t=$("ntx").value.trim();if(!t)return;nsel=$("nsub").value;D.notes.push({s:nsel,t:t,d:Date.now()});save();render()}
+const delNote=i=>{if(confirm("ይሰረዝ?")){D.notes.splice(i,1);save();render()}};
+
+/* Materials + files (IndexedDB) */
+let db;try{const q=indexedDB.open("scf",1);q.onupgradeneeded=()=>q.result.createObjectStore("f");q.onsuccess=()=>db=q.result}catch(e){}
+const fput=(id,b,cb)=>{try{const t=db.transaction("f","readwrite");t.objectStore("f").put(b,id);t.oncomplete=()=>cb(1);t.onerror=()=>cb(0)}catch(e){cb(0)}};
+const fget=(id,cb)=>{try{const q=db.transaction("f").objectStore("f").get(id);q.onsuccess=()=>cb(q.result);q.onerror=()=>cb()}catch(e){cb()}};
+function viewMat(){
+ let h='<h2>ማቴሪያሎቼ</h2><div class="card"><input id="mn" placeholder="ስም (ለምሳሌ የምዕራፍ 3 ስላይድ)"><div class="row"><select id="mt">'+Object.keys(TY).map(k=>'<option value="'+k+'">'+TY[k]+'</option>').join("")+'</select><select id="ms">'+subOpts("","ትምህርት ምረጥ")+'</select></div><input id="ml" placeholder="ሊንክ (Drive፣ YouTube…)"><div class="mute">ወይም ፋይል ከስልክ ይምረጡ፦</div><input id="mf" type="file"><button style="width:100%;margin-top:8px" onclick="addMat()">አስቀምጥ</button></div>';
+ if(!D.mats.length)h+='<div class="empty">እስካሁን ምንም ማቴሪያል የለም።</div>';
+ return h+D.mats.map((m,i)=>'<div class="card"><div class="row"><div><span class="tag">'+TY[m.y]+'</span>'+(m.s?'<span class="tag">'+esc(m.s)+'</span>':'')+'<div style="font-size:20px;font-weight:900;margin-top:6px">'+esc(m.n)+'</div>'+(m.fid?'<button class="sec" onclick="openF('+i+')">ክፈት ('+esc(m.fn)+')</button>':m.l?(/^https?:\/\//i.test(m.l)?'<a style="color:var(--ink2)" href="'+esc(m.l)+'">ክፈት</a>':'<div class="mute">'+esc(m.l)+'</div>'):'')+'</div><button class="x" onclick="delMat('+i+')">✕</button></div></div>').join("")}
+function addMat(){const n=$("mn").value.trim(),f=$("mf").files[0];if(!n&&!f)return;
+ const m={n:n||f.name,y:$("mt").value,s:$("ms").value,l:$("ml").value.trim()};
+ if(!f){D.mats.unshift(m);save();return render()}
+ m.fid="f"+Date.now();m.fn=f.name;
+ fput(m.fid,f,ok=>{if(!ok){alert("ፋይሉን ማስቀመጥ አልተቻለም።");return}D.mats.unshift(m);save();render()})}
+function delMat(i){if(!confirm("ይሰረዝ?"))return;const m=D.mats[i];if(m.fid)try{db.transaction("f","readwrite").objectStore("f").delete(m.fid)}catch(e){}D.mats.splice(i,1);save();render()}
+function openF(i){const m=D.mats[i];fget(m.fid,b=>{if(!b)return alert("ፋይሉ አልተገኘም።");const u=URL.createObjectURL(b),t=b.type||"";
+ const o=document.createElement("div");o.id="ov";
+ o.innerHTML=(t.startsWith("image")?'<img src="'+u+'">':t.startsWith("video")?'<video src="'+u+'" controls></video>':t.startsWith("audio")?'<audio src="'+u+'" controls></audio>':'<p>ይህ የፋይል አይነት በአፑ ውስጥ አይከፈትም። PDF እና ሰነዶች ለመክፈት የ Drive ሊንክ ያስቀምጡ።</p>')+'<br><button onclick="document.getElementById(\'ov\').remove()">✕ ዝጋ</button>';
+ document.body.appendChild(o)})}
+
+/* Report + backup */
+function viewRep(){const d=new Date(),L=[];for(let i=6;i>=0;i--){const x=new Date(d);x.setDate(d.getDate()-i);L.push({k:key(x),w:WD[x.getDay()].slice(0,3),m:dayMin(key(x))})}
+ const mx=Math.max(30,...L.map(x=>x.m)),tot=L.reduce((a,x)=>a+x.m,0);
+ let h='<h2>የሳምንት የጥናት ሰዓት</h2><div class="card"><div>ባለፉት 7 ቀናት፦ <b style="font-weight:900">'+fmt(tot)+'</b></div><div class="bars">'+L.map(x=>'<div><span>'+(x.m||"")+'</span><i style="height:'+Math.round(x.m/mx*100)+'%"></i><span>'+x.w+'</span></div>').join("")+'</div><div class="mute">ቁጥሩ በደቂቃ ነው።</div></div>';
+ h+='<h2>በትምህርት</h2><div class="card">';
+ const S=D.subjects.map(s=>({n:s.name,m:mins(s.name)}));if(mins("ሌላ"))S.push({n:"ሌላ",m:mins("ሌላ")});
+ const sm=Math.max(1,...S.map(x=>x.m));
+ h+=S.length?S.map(x=>'<div class="row"><span style="flex:2">'+esc(x.n)+'</span><span class="mute" style="text-align:end">'+fmt(x.m)+'</span></div><div class="bar"><i style="width:'+Math.round(x.m/sm*100)+'%"></i></div>').join(""):'<div class="empty">ገና መረጃ የለም። የጥናት ቆጣሪውን ይጠቀሙ።</div>';
+ h+='</div><h2>መረጃ ማስቀመጫና መመለሻ</h2><div class="card"><div class="mute">«ቅዳ» ን ይጫኑና ኮዱን በቴሌግራም «Saved Messages» ወይም ማስታወሻ ውስጥ ያስቀምጡ። ስልክ ሲቀየር በአዲሱ ስልክ ኮዱን ከታች ይለጥፉና «መልስ» ይጫኑ። (የተጫኑ ፋይሎች አይካተቱም፤ ሊንኮች ይካተታሉ።)</div><textarea id="bk" style="min-height:120px;font-size:13px">'+esc(JSON.stringify(D))+'</textarea><div class="row"><button onclick="bkCopy()">📋 ቅዳ</button><button class="sec" onclick="bkRestore()">⬇ መልስ</button></div></div>';
+ return h}
+function bkCopy(){const t=$("bk");t.value=JSON.stringify(D);t.select();try{document.execCommand("copy");alert("ተቀድቷል")}catch(e){alert("ጽሑፉን በእጅ ይምረጡና ይቅዱ")}}
+function bkRestore(){try{const o=JSON.parse($("bk").value);if(!o||!Array.isArray(o.subjects))throw 0;if(!confirm("አሁን ያለው መረጃ በዚህ ይተካል። ይቀጥል?"))return;D=Object.assign({subjects:[],mats:[],days:{},log:{},notes:[],wk:{},pc:{f:25,b:5,l:15}},o);save();P.left=dur(P.m);render()}catch(e){alert("ኮዱ ትክክል አይደለም።")}}
+
+/* Nav */
+function render(){head();$("app").innerHTML={today:viewToday,timer:viewTimer,plan:viewPlan,notes:viewNotes,mat:viewMat,rep:viewRep}[tab]()}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x==b));render();scrollTo(0,0)});
+render();
+</script></body></html>
