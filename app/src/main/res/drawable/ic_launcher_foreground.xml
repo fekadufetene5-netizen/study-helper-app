@@ -4,11 +4,35 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- የምረቃ ባርኔጣ -->
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="3"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M54,38 C48,32 38,29 30,29 C30,29 30,70 30,70 C38,70 48,73 54,79 C60,73 70,70 78,70 C78,70 78,29 78,29 C70,29 60,32 54,38 Z M54,38 L54,79" />
+        android:fillColor="#FFC24B"
+        android:pathData="M54,22 L78,31 L54,40 L30,31 Z" />
+    <path
+        android:fillColor="#FFC24B"
+        android:pathData="M44,32 L64,32 L64,38 C64,40.2 44,40.2 44,38 Z" />
+    <!-- የመጽሐፍ ገጾች (ግራ) -->
+    <path
+        android:fillColor="#F4E9D8"
+        android:pathData="M54,40 C47,35 36,32 27,32 C27,32 27,74 27,74 C36,74 47,77 54,82 Z" />
+    <!-- የመጽሐፍ ገጾች (ቀኝ) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,40 C61,35 72,32 81,32 C81,32 81,74 81,74 C72,74 61,77 54,82 Z" />
+    <!-- የመሃል ማሰሪያ -->
+    <path
+        android:fillColor="#12325B"
+        android:pathData="M53,40 L55,40 L55,82 L53,82 Z" />
+    <!-- የገጽ መስመሮች (ግራ) -->
+    <path
+        android:fillColor="#2E8FE0"
+        android:pathData="M33,43 L48,47 L48,49 L33,45 Z M33,52 L48,56 L48,58 L33,54 Z M33,61 L48,65 L48,67 L33,63 Z" />
+    <!-- የገጽ መስመሮች (ቀኝ) -->
+    <path
+        android:fillColor="#2E8FE0"
+        android:pathData="M60,47 L75,43 L75,45 L60,49 Z M60,56 L75,52 L75,54 L60,58 Z M60,65 L75,61 L75,63 Z" />
+    <!-- ኮከብ (ስኬት) -->
+    <path
+        android:fillColor="#FFD873"
+        android:pathData="M80,68 L82,73 L87,74 L82,76 L80,81 L78,76 L73,74 L78,73 Z" />
 </vector>
