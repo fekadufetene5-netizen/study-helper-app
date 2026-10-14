@@ -7,7 +7,7 @@
 @media(prefers-color-scheme:dark){:root{--bg:#0A1F24;--card:#12323A;--tx:#EAF4F2;--mute:#9DBBC1}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:"Noto Sans Ethiopic","Nyala",system-ui,sans-serif;font-weight:700;font-size:17px;line-height:1.5;padding-bottom:96px}
-header{background:var(--ink);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 20px) 20px 26px;border-radius:0 0 34px 34px}
+header{position:relative;background:var(--ink);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 20px) 20px 26px;border-radius:0 0 34px 34px}
 header small{display:block;color:var(--gold);font-size:16px}
 header h1{margin:2px 0 0;font-size:32px;font-weight:900}
 .streak{margin-top:12px;display:inline-block;background:var(--gold);color:var(--ink);border-radius:30px;padding:5px 16px;font-weight:900}
@@ -43,10 +43,12 @@ nav button{flex:1;background:none;color:#fff;font-size:12px;padding:5px 0;border
 nav button span{display:block;font-size:22px}
 nav button.on{background:var(--gold);color:var(--ink)}
 .empty{text-align:center;color:var(--mute);padding:16px}
+#sp{position:fixed;inset:0;z-index:20;background:#2B6777;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}#sp div{font-size:80px}#sp h1{margin:8px 0 0;font-size:30px}
 #ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;color:#fff;text-align:center}
 #ov img,#ov video{max-width:100%;max-height:70vh}
 </style></head><body>
-<header><small id="date"></small><h1>የጥናት ጓደኛ</h1><div class="streak" id="streak"></div></header>
+<div id="sp"><div>📖</div><h1>የጥናት ጓደኛ</h1></div>
+<header><button onclick="go('about')" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;padding:4px 12px;background:rgba(255,255,255,.15);color:#fff;font-size:20px">ⓘ</button><small id="date"></small><h1>የጥናት ጓደኛ</h1><div class="streak" id="streak"></div></header>
 <main id="app"></main>
 <nav>
 <button data-t="today" class="on"><span>✅</span>ዛሬ</button>
@@ -57,9 +59,9 @@ nav button.on{background:var(--gold);color:var(--ink)}
 <button data-t="rep"><span>📊</span>ሪፖርት</button>
 </nav>
 <script>
-let D={subjects:[],mats:[],days:{},log:{},notes:[],wk:{},pc:{f:25,b:5,l:15}};
+let D={subjects:[],mats:[],days:{},log:{},notes:[],wk:{},pc:{f:25,b:5,l:15},rem:{d:{on:0,t:"18:00",x:"ጊዜው ደርሷል፤ ወደ ጥናት ተመለስ! 📚"},w:{on:0,b:10}}};
 try{const s=localStorage.getItem("sc2");if(s)Object.assign(D,JSON.parse(s))}catch(e){}
-const save=()=>{try{localStorage.setItem("sc2",JSON.stringify(D))}catch(e){}};
+const save=()=>{try{localStorage.setItem("sc2",JSON.stringify(D))}catch(e){}syncRem()};
 const $=i=>document.getElementById(i),pad=n=>(n<10?"0":"")+n;
 const key=(d=new Date())=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const pd=s=>{const a=s.split("-");return new Date(+a[0],a[1]-1,+a[2])};
@@ -118,7 +120,7 @@ const tog=i=>{const x=today().tasks[i];x.d=x.d?0:1;save();render()},delTask=i=>{
 
 /* Plan: subjects + weekly timetable */
 function viewPlan(){
- let h='<h2>የትምህርት ዓይነቶች</h2><div class="card"><input id="sn" placeholder="የትምህርት ስም (ለምሳሌ ፊዚክስ)"><div class="row"><div><div class="mute">የፈተና ቀን</div><input id="se" type="date"></div><div><div class="mute">አስፈላጊነት</div><select id="sp"><option value="3">ከፍተኛ</option><option value="2" selected>መካከለኛ</option><option value="1">ዝቅተኛ</option></select></div></div><button style="width:100%;margin-top:8px" onclick="addSub()">ጨምር</button></div>';
+ let h=remCard()+'<h2>የትምህርት ዓይነቶች</h2><div class="card"><input id="sn" placeholder="የትምህርት ስም (ለምሳሌ ፊዚክስ)"><div class="row"><div><div class="mute">የፈተና ቀን</div><input id="se" type="date"></div><div><div class="mute">አስፈላጊነት</div><select id="sp"><option value="3">ከፍተኛ</option><option value="2" selected>መካከለኛ</option><option value="1">ዝቅተኛ</option></select></div></div><button style="width:100%;margin-top:8px" onclick="addSub()">ጨምር</button></div>';
  if(!D.subjects.length)h+='<div class="empty">እስካሁን የለም።</div>';
  D.subjects.forEach((s,i)=>{const d=dl(s.exam);h+='<div class="card"><div class="row"><div><b style="font-size:21px;font-weight:900">'+esc(s.name)+'</b><div class="mute">'+(d===null?'የፈተና ቀን አልተቀመጠም':d<0?'ፈተናው አልፏል':'ፈተና በ'+d+' ቀን ('+es(pd(s.exam))+')')+' · ያጠናሁት '+fmt(mins(s.name))+'</div></div><button class="x" onclick="delSub('+i+')">✕</button></div></div>'});
  h+='<h2>ሳምንታዊ የጥናት ፕሮግራም</h2><div class="card"><select id="wd">'+ORD.map(d=>'<option value="'+d+'">'+WD[d]+'</option>').join("")+'</select><div class="row"><input id="wt" type="time" value="18:00"><select id="ws">'+subOpts("")+'<option>ሌላ</option></select></div><input id="wn" placeholder="ምን ታጠናለህ? (አማራጭ)"><button style="width:100%" onclick="addSlot()">ወደ ፕሮግራሙ ጨምር</button></div>';
@@ -169,10 +171,25 @@ function viewRep(){const d=new Date(),L=[];for(let i=6;i>=0;i--){const x=new Dat
  h+='</div><h2>መረጃ ማስቀመጫና መመለሻ</h2><div class="card"><div class="mute">«ቅዳ» ን ይጫኑና ኮዱን በቴሌግራም «Saved Messages» ወይም ማስታወሻ ውስጥ ያስቀምጡ። ስልክ ሲቀየር በአዲሱ ስልክ ኮዱን ከታች ይለጥፉና «መልስ» ይጫኑ። (የተጫኑ ፋይሎች አይካተቱም፤ ሊንኮች ይካተታሉ።)</div><textarea id="bk" style="min-height:120px;font-size:13px">'+esc(JSON.stringify(D))+'</textarea><div class="row"><button onclick="bkCopy()">📋 ቅዳ</button><button class="sec" onclick="bkRestore()">⬇ መልስ</button></div></div>';
  return h}
 function bkCopy(){const t=$("bk");t.value=JSON.stringify(D);t.select();try{document.execCommand("copy");alert("ተቀድቷል")}catch(e){alert("ጽሑፉን በእጅ ይምረጡና ይቅዱ")}}
-function bkRestore(){try{const o=JSON.parse($("bk").value);if(!o||!Array.isArray(o.subjects))throw 0;if(!confirm("አሁን ያለው መረጃ በዚህ ይተካል። ይቀጥል?"))return;D=Object.assign({subjects:[],mats:[],days:{},log:{},notes:[],wk:{},pc:{f:25,b:5,l:15}},o);save();P.left=dur(P.m);render()}catch(e){alert("ኮዱ ትክክል አይደለም።")}}
+function bkRestore(){try{const o=JSON.parse($("bk").value);if(!o||!Array.isArray(o.subjects))throw 0;if(!confirm("አሁን ያለው መረጃ በዚህ ይተካል። ይቀጥል?"))return;D=Object.assign({subjects:[],mats:[],days:{},log:{},notes:[],wk:{},pc:{f:25,b:5,l:15},rem:{d:{on:0,t:"18:00",x:"ጊዜው ደርሷል፤ ወደ ጥናት ተመለስ! 📚"},w:{on:0,b:10}}},o);save();P.left=dur(P.m);render()}catch(e){alert("ኮዱ ትክክል አይደለም።")}}
+
+/* Reminders */
+function syncRem(){try{if(!window.Android)return;const L=[],r=D.rem;
+ if(r.d.on){const a=r.d.t.split(":");L.push({d:-1,h:+a[0],m:+a[1],t:"📚 የጥናት ጊዜ",x:r.d.x})}
+ if(r.w.on)for(const d in D.wk)D.wk[d].forEach(s=>{const a=s.t.split(":");let tm=+a[0]*60+ +a[1]-r.w.b,dd=+d;if(tm<0){tm+=1440;dd=(dd+6)%7}L.push({d:dd,h:Math.floor(tm/60),m:tm%60,t:"📚 "+s.s,x:(s.n||"የጥናት ጊዜህ ደርሷል")+(r.w.b?" · በ"+r.w.b+" ደቂቃ ውስጥ":"")})});
+ Android.setReminders(JSON.stringify(L))}catch(e){}}
+function remCard(){const r=D.rem;return '<h2>🔔 ማሳሰቢያ</h2><div class="card">'+(window.Android?'':'<div class="mute">ማሳሰቢያዎች የሚሰሩት በተጫነው አፕ ውስጥ ብቻ ነው።</div>')+
+ '<label class="row"><input type="checkbox" class="chk" '+(r.d.on?'checked':'')+' onchange="remSet(\'d\',\'on\',this.checked?1:0)"><span>በየቀኑ አሳስበኝ</span><input type="time" style="flex:none;width:130px" value="'+r.d.t+'" onchange="remSet(\'d\',\'t\',this.value)"></label><input value="'+esc(r.d.x)+'" onchange="remSet(\'d\',\'x\',this.value)">'+
+ '<label class="row" style="margin-top:8px"><input type="checkbox" class="chk" '+(r.w.on?'checked':'')+' onchange="remSet(\'w\',\'on\',this.checked?1:0)"><span>በሳምንት ፕሮግራሜ ሰዓት አሳስበኝ</span></label><select onchange="remSet(\'w\',\'b\',+this.value)">'+[0,10,30,60].map(b=>'<option value="'+b+'"'+(r.w.b==b?' selected':'')+'>'+(b?b+' ደቂቃ ቀደም ብሎ':'በሰዓቱ')+'</option>').join("")+'</select></div>'}
+function remSet(g,k,v){D.rem[g][k]=v;try{if(window.Android&&(D.rem.d.on||D.rem.w.on))Android.requestNotifications()}catch(e){}save();render()}
+
+/* About */
+const DEV={name:"Fekadu",app:"የጥናት ጓደኛ",ver:"1.0"};
+function viewAbout(){return '<h2>ስለ አፑ</h2><div class="card" style="text-align:center"><div style="font-size:60px">📖</div><div style="font-size:26px;font-weight:900">'+DEV.app+'</div><div class="mute">ስሪት '+DEV.ver+'</div></div><div class="card"><div class="mute">ገንቢ</div><div style="font-size:22px;font-weight:900">'+esc(DEV.name)+'</div><div class="mute" style="margin-top:8px">ተማሪዎች የጥናት ጊዜያቸውን፣ ማስታወሻቸውንና ማቴሪያላቸውን በአንድ ቦታ እንዲያስተዳድሩ የተሠራ አፕ ነው። መረጃዎ በስልክዎ ውስጥ ብቻ ይቀመጣል፤ ወደ ኢንተርኔት አይላክም።</div></div><div class="card"><div class="mute">ባህሪያት</div>ቆጣሪ · ማስታወሻ · ሳምንታዊ ፕሮግራም · ማሳሰቢያ · ሪፖርት · ባክአፕ</div><button style="width:100%" onclick="go(\'today\')">← ተመለስ</button>'}
 
 /* Nav */
-function render(){head();$("app").innerHTML={today:viewToday,timer:viewTimer,plan:viewPlan,notes:viewNotes,mat:viewMat,rep:viewRep}[tab]()}
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x==b));render();scrollTo(0,0)});
-render();
+function render(){head();$("app").innerHTML={today:viewToday,timer:viewTimer,plan:viewPlan,notes:viewNotes,about:viewAbout,mat:viewMat,rep:viewRep}[tab]()}
+function go(t){tab=t;document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x.dataset.t==t));render();scrollTo(0,0)}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.t));
+render();syncRem();setTimeout(()=>{const e=$("sp");e.style.opacity=0;setTimeout(()=>e.remove(),500)},1200);
 </script></body></html>
