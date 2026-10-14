@@ -63,22 +63,12 @@ class MainActivity : AppCompatActivity() {
         webView.settings.databaseEnabled = true
         webView.settings.mediaPlaybackRequiresUserGesture = false
         webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-        
-        // የአካባቢ ፋይልን (Local file) እንዲያነብ ፈቃድ መስጠት
-        webView.settings.allowFileAccess = true
-        webView.settings.allowContentAccess = true
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url
-                
-                // ለውጥ 1፡ ጥያቄው የአካባቢ ፋይል (file://) ከሆነ በዌብቪው ውስጥ እንዲከፈት መፍቀድ
-                if (request.url.scheme == "file") {
-                    return false
-                }
-
                 val host = url.host ?: ""
-                val isOwnOrigin = host == "claude.ai" || host.endsWith(".claude.ai")
+                val isOwnOrigin = host == "fekadufetene5-netizen.github.io"
                 val looksLikeFile = url.path?.contains("/_blob/") == true
                 return if (!isOwnOrigin || looksLikeFile) {
                     openExternally(url)
@@ -142,7 +132,6 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
         } else {
-            // ለውጥ 2፡ ከኦንላይን ዩአርኤል ይልቅ የአሴት ፋይልን መጫን
             webView.loadUrl(STUDY_APP_URL)
         }
     }
@@ -183,7 +172,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        // የጥናት አፑን ከአካባቢው አሴት ፋይል ላይ እንዲጭን ተቀይሯል
-        private const val STUDY_APP_URL = "file:///android_asset/index.html"
+        private const val STUDY_APP_URL = "https://fekadufetene5-netizen.github.io/study-helper-app/"
     }
 }
