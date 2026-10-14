@@ -67,15 +67,13 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url
-                val host = url.host ?: ""
-                val isOwnOrigin = host == "fekadufetene5-netizen.github.io"
-                val looksLikeFile = url.path?.contains("/_blob/") == true
-                return if (!isOwnOrigin || looksLikeFile) {
-                    openExternally(url)
-                    true
-                } else {
-                    false
+                // የአካባቢ (local) ገጽ ከሆነ በቀጥታ በWebView ውስጥ ይከፈት
+                if (url.scheme == "file") {
+                    return false
                 }
+                // ሌላ ማንኛውም ውጫዊ አድራሻ ከሆነ በውጫዊ browser ይክፈት
+                openExternally(url)
+                return true
             }
 
             override fun onPageFinished(view: WebView, url: String?) {
@@ -172,6 +170,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val STUDY_APP_URL = "https://fekadufetene5-netizen.github.io/study-helper-app/"
+        private const val STUDY_APP_URL = "file:///android_asset/index.html"
     }
 }
