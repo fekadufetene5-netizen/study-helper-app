@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     inner class Bridge {
         @JavascriptInterface fun getLock(): Boolean = lockOn()
         @JavascriptInterface fun canLock(): Boolean = canAuth()
+        @JavascriptInterface fun lockNow() { runOnUiThread { finishAndRemoveTask() } }
         @JavascriptInterface fun setLock(on: Boolean) {
             runOnUiThread {
                 prefs.edit().putBoolean("lock", on && canAuth()).apply()
