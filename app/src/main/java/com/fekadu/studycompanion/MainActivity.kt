@@ -35,21 +35,29 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface fun setLock(on: Boolean) {
             runOnUiThread {
                 prefs.edit().putBoolean("lock", on && canAuth()).apply()
-                applySecure()
             }
         }
     }
 
-    // Hides app content in Recent Apps and blocks screenshots while the lock is on
-    private fun applySecure() {
-        if (lockOn()) window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+    // Hides app content in Recent Apps only. Screenshots stay allowed while the app is in use.
+    private fun secure(on: Boolean) {
+        if (on && lockOn()) window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        secure(true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        secure(false)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        applySecure()
         webView = WebView(this)
         setContentView(webView)
 
