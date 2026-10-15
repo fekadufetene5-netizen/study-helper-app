@@ -175,4 +175,5 @@ function bkRestore(){try{const o=JSON.parse($("bk").value);if(!o||!Array.isArray
 function render(){head();$("app").innerHTML={today:viewToday,timer:viewTimer,plan:viewPlan,notes:viewNotes,mat:viewMat,rep:viewRep}[tab]()}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x==b));render();scrollTo(0,0)});
 render();
-</script></body></html>
+</script><script src="extras.js"></script>
+<script src="lock.js"></script></body></html>
