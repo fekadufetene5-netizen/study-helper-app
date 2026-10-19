@@ -1,6 +1,11 @@
 package com.fekadu.studycompanion
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.core.app.ActivityCompat
 import android.content.Context
 import android.os.Bundle
 import android.view.View
@@ -31,6 +36,22 @@ class MainActivity : AppCompatActivity() {
     inner class Bridge {
         @JavascriptInterface fun getLock(): Boolean = lockOn()
         @JavascriptInterface fun canLock(): Boolean = canAuth()
+        @JavascriptInterface fun setReminders(json: String) {
+            prefs.edit().putString("rem", json).apply()
+            Reminders.schedule(this@MainActivity)
+        }
+        @JavascriptInterface fun canNotify(): Boolean = Reminders.canNotify(this@MainActivity)
+        @JavascriptInterface fun askNotify() {
+            runOnUiThread {
+                if (Build.VERSION.SDK_INT >= 33)
+                    ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 7)
+            }
+        }
+        @JavascriptInterface fun batterySettings() {
+            runOnUiThread {
+                try { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) } catch (e: Exception) { }
+            }
+        }
         @JavascriptInterface fun lockNow() { runOnUiThread { finishAndRemoveTask() } }
         @JavascriptInterface fun setLock(on: Boolean) {
             runOnUiThread {
