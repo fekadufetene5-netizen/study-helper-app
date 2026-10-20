@@ -1,255 +1,269 @@
-
 package com.fekadu.studycompanion
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
+import android.app.Activity
+import android.app.KeyguardManager
+import android.content.ContentValues
 import android.content.Intent
-import android.content.pm.PackageManager
+import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
+import android.os.Environment
+import android.provider.MediaStore
+import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private val prefs by lazy {
-        getSharedPreferences("sc", Context.MODE_PRIVATE)
-    }
+    private lateinit var progressBar: ProgressBar
+    private lateinit var errorView: View
+    private lateinit var prefs: SharedPreferences
+    private var authenticated = false
+    private var filePathCallback: android.webkit.ValueCallback<Array<Uri>>? = null
 
-    private var leftAt = 0L
-    private var prompting = false
-
-    private val auth =
-        BiometricManager.Authenticators.BIOMETRIC_WEAK or
-            BiometricManager.Authenticators.DEVICE_CREDENTIAL
-
-    private fun lockOn() = prefs.getBoolean("lock", false)
-
-    private fun canAuth(): Boolean =
-        BiometricManager.from(this).canAuthenticate(auth) ==
-            BiometricManager.BIOMETRIC_SUCCESS
-
-    inner class Bridge {
-
-        @JavascriptInterface
-        fun getLock(): Boolean = lockOn()
-
-        @JavascriptInterface
-        fun canLock(): Boolean = canAuth()
-
-        @JavascriptInterface
-        fun canNotify(): Boolean =
-            Reminders.canNotify(this@MainActivity)
-
-        @JavascriptInterface
-        fun setReminders(json: String) {
-            prefs.edit().putString("rem", json).apply()
-            Reminders.schedule(this@MainActivity)
-        }
-
-        @JavascriptInterface
-        fun askNotify() {
-            runOnUiThread {
-                if (
-                    Build.VERSION.SDK_INT >= 33 &&
-                    ContextCompat.checkSelfPermission(
-                        this@MainActivity,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    ActivityCompat.requestPermissions(
-                        this@MainActivity,
-                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                        7
-                    )
-                }
+    private val fileChooserLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val callback = filePathCallback
+            filePathCallback = null
+            if (callback == null) return@registerForActivityResult
+            val data = result.data
+            if (result.resultCode == Activity.RESULT_OK && data?.data != null) {
+                callback.onReceiveValue(arrayOf(data.data!!))
+            } else {
+                callback.onReceiveValue(null)
             }
         }
 
-        @JavascriptInterface
-        fun batterySettings() {
-            runOnUiThread {
-                try {
-                    startActivity(
-                        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                    )
-                } catch (_: Exception) {
-                    // Settings screen may not be available.
-                }
+    private val authLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                authenticated = true
+            } else {
+                finish()
             }
+        }
+
+    private val importLauncher: ActivityResultLauncher<Array<String>> =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri == null) return@registerForActivityResult
+            try {
+                val text = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: ""
+                val escaped = JSONObject.quote(text)
+                webView.post {
+                    webView.evaluateJavascript("window.onBackupImported && window.onBackupImported($escaped)", null)
+                }
+            } catch (e: Exception) { /* ignore unreadable file */ }
+        }
+
+    inner class NativeBridge {
+        @JavascriptInterface
+        fun canLock(): Boolean {
+            val km = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
+            return km.isDeviceSecure
+        }
+
+        @JavascriptInterface
+        fun getLock(): Boolean = prefs.getBoolean("lock_enabled", false)
+
+        @JavascriptInterface
+        fun setLock(enabled: Boolean) {
+            prefs.edit().putBoolean("lock_enabled", enabled).apply()
+            if (!enabled) authenticated = true
         }
 
         @JavascriptInterface
         fun lockNow() {
-            runOnUiThread { finishAndRemoveTask() }
+            authenticated = false
+            runOnUiThread { moveTaskToBack(true) }
         }
 
         @JavascriptInterface
-        fun setLock(on: Boolean) {
-            runOnUiThread {
-                prefs.edit()
-                    .putBoolean("lock", on && canAuth())
-                    .apply()
-            }
+        fun exportBackup(json: String): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+            return try {
+                val name = "StudyCompanion_backup_" + System.currentTimeMillis() + ".json"
+                val values = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "application/json")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+                val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                if (uri != null) {
+                    contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+                    true
+                } else false
+            } catch (e: Exception) { false }
         }
-    }
 
-    private fun secure(on: Boolean) {
-        if (on && lockOn()) {
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_SECURE,
-                WindowManager.LayoutParams.FLAG_SECURE
-            )
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        @JavascriptInterface
+        fun importBackup() {
+            runOnUiThread { importLauncher.launch(arrayOf("application/json", "*/*")) }
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        secure(true)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        secure(false)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        prefs = getSharedPreferences("sc_prefs", MODE_PRIVATE)
 
+        val root = FrameLayout(this)
         webView = WebView(this)
-        setContentView(webView)
+        progressBar = ProgressBar(this).apply { isIndeterminate = true }
+        errorView = buildErrorView()
+        errorView.visibility = View.GONE
+
+        root.addView(webView, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        root.addView(progressBar, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
+        root.addView(errorView, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        setContentView(root)
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
-        webView.webViewClient = WebViewClient()
-        webView.webChromeClient = WebChromeClient()
+        webView.settings.databaseEnabled = true
+        webView.settings.mediaPlaybackRequiresUserGesture = false
+        webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+        webView.addJavascriptInterface(NativeBridge(), "Native")
 
-        // IMPORTANT: Must match window.Native in index.html.
-        webView.addJavascriptInterface(Bridge(), "Native")
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val url = request.url
+                if (url.scheme == "file") {
+                    return false
+                }
+                openExternally(url)
+                return true
+            }
+
+            override fun onPageFinished(view: WebView, url: String?) {
+                progressBar.visibility = View.GONE
+            }
+
+            override fun onReceivedError(
+                view: WebView, request: WebResourceRequest, error: WebResourceError
+            ) {
+                if (request.isForMainFrame) {
+                    progressBar.visibility = View.GONE
+                    webView.visibility = View.GONE
+                    errorView.visibility = View.VISIBLE
+                }
+            }
+        }
+
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onCreateWindow(
+                view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message
+            ): Boolean {
+                val newWebView = WebView(this@MainActivity)
+                newWebView.webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(v: WebView, request: WebResourceRequest): Boolean {
+                        openExternally(request.url)
+                        return true
+                    }
+                }
+                val transport = resultMsg.obj as WebView.WebViewTransport
+                transport.webView = newWebView
+                resultMsg.sendToTarget()
+                return true
+            }
+
+            override fun onShowFileChooser(
+                webView: WebView,
+                callback: android.webkit.ValueCallback<Array<Uri>>,
+                params: FileChooserParams
+            ): Boolean {
+                filePathCallback = callback
+                val intent = params.createIntent()
+                return try {
+                    fileChooserLauncher.launch(intent)
+                    true
+                } catch (e: Exception) {
+                    filePathCallback = null
+                    false
+                }
+            }
+        }
+
+        webView.setDownloadListener { url, _, _, _, _ -> openExternally(Uri.parse(url)) }
 
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
         } else {
-            webView.loadUrl("file:///android_asset/index.html")
-        }
-
-        if (lockOn()) {
-            webView.visibility = View.INVISIBLE
-            authenticate()
+            webView.loadUrl(STUDY_APP_URL)
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(
-            requestCode,
-            permissions,
-            grantResults
-        )
-
-        if (requestCode == 7) {
-            // Re-apply the saved reminders after the permission response.
-            Reminders.schedule(this)
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        leftAt = System.currentTimeMillis()
-
-        if (::webView.isInitialized && lockOn()) {
-            webView.visibility = View.INVISIBLE
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        if (!::webView.isInitialized) return
-
-        if (leftAt == 0L || !lockOn()) {
-            webView.visibility = View.VISIBLE
-            return
-        }
-
-        if (System.currentTimeMillis() - leftAt > 30_000) {
-            authenticate()
-        } else {
-            webView.visibility = View.VISIBLE
-        }
-    }
-
-    private fun authenticate() {
-        if (prompting) return
-
-        if (!canAuth()) {
-            webView.visibility = View.VISIBLE
-            return
-        }
-
-        prompting = true
-
-        val prompt = BiometricPrompt(
-            this,
-            ContextCompat.getMainExecutor(this),
-            object : BiometricPrompt.AuthenticationCallback() {
-
-                override fun onAuthenticationSucceeded(
-                    result: BiometricPrompt.AuthenticationResult
-                ) {
-                    prompting = false
-                    webView.visibility = View.VISIBLE
+    override fun onResume() {
+        super.onResume()
+        if (prefs.getBoolean("lock_enabled", false) && !authenticated) {
+            val km = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
+            if (km.isDeviceSecure) {
+                val intent = km.createConfirmDeviceCredentialIntent(getString(R.string.app_name), null)
+                if (intent != null) {
+                    authLauncher.launch(intent)
+                } else {
+                    authenticated = true
                 }
-
-                override fun onAuthenticationError(
-                    errorCode: Int,
-                    errString: CharSequence
-                ) {
-                    prompting = false
-                    finish()
-                }
+            } else {
+                authenticated = true
             }
-        )
+        }
+    }
 
-        prompt.authenticate(
-            BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Study Companion")
-                .setAllowedAuthenticators(auth)
-                .build()
-        )
+    private fun openExternally(uri: Uri) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
+        } catch (e: Exception) { /* no app can handle it */ }
+    }
+
+    private fun buildErrorView(): View {
+        val container = FrameLayout(this)
+        val text = TextView(this).apply {
+            text = "መጫን አልተቻለም። ኢንተርኔትህን አረጋግጥና ንካ እንደገና ለመሞከር።"
+            textSize = 16f
+            gravity = Gravity.CENTER
+            setPadding(48, 48, 48, 48)
+        }
+        container.addView(text, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
+        container.setOnClickListener {
+            errorView.visibility = View.GONE
+            webView.visibility = View.VISIBLE
+            progressBar.visibility = View.VISIBLE
+            webView.reload()
+        }
+        return container
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        if (::webView.isInitialized) {
-            webView.saveState(outState)
-        }
+        webView.saveState(outState)
     }
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (::webView.isInitialized && webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
+        if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
+    }
+
+    companion object {
+        private const val STUDY_APP_URL = "file:///android_asset/index.html"
     }
 }
