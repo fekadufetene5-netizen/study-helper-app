@@ -1,4 +1,3 @@
-
 package com.fekadu.studycompanion
 
 import android.Manifest
