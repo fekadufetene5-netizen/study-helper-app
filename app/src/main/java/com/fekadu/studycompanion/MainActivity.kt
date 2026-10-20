@@ -71,6 +71,9 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) { /* ignore unreadable file */ }
         }
 
+    private val notifPermLauncher: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* granted or not, ignore */ }
+
     inner class NativeBridge {
         @JavascriptInterface
         fun canLock(): Boolean {
@@ -114,6 +117,43 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun importBackup() {
             runOnUiThread { importLauncher.launch(arrayOf("application/json", "*/*")) }
+        }
+
+        @JavascriptInterface
+        fun hasNotifPermission(): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+            return androidx.core.content.ContextCompat.checkSelfPermission(
+                this@MainActivity, android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+
+        @JavascriptInterface
+        fun requestNotifPermission() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                runOnUiThread { notifPermLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
+            }
+        }
+
+        @JavascriptInterface
+        fun scheduleReminder(id: Int, whenMillis: Double, title: String, body: String, repeatDaily: Boolean): Boolean {
+            return try {
+                if (repeatDaily) {
+                    val cal = java.util.Calendar.getInstance().apply { timeInMillis = whenMillis.toLong() }
+                    ReminderScheduler.scheduleDaily(
+                        this@MainActivity, id,
+                        cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE),
+                        title, body
+                    )
+                } else {
+                    ReminderScheduler.schedule(this@MainActivity, id, whenMillis.toLong(), title, body, false)
+                }
+                true
+            } catch (e: Exception) { false }
+        }
+
+        @JavascriptInterface
+        fun cancelReminder(id: Int) {
+            ReminderScheduler.cancel(this@MainActivity, id)
         }
     }
 
