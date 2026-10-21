@@ -5,158 +5,260 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>የተማሪዎች መድረክ (Student Portal)</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #f3f4f6; color: #1f2937; line-height: 1.5; }
-    header { background-color: #1e40af; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { font-size: 1.5rem; }
-    .container { display: flex; flex-wrap: wrap; max-width: 1400px; margin: 20px auto; gap: 20px; padding: 0 10px; }
-    .sidebar { flex: 1; min-width: 280px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .main-content { flex: 3; min-width: 320px; display: flex; flex-direction: column; gap: 20px; }
-    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .card h2 { font-size: 1.25rem; color: #1e40af; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; }
-    .btn { background-color: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #f1f5f9; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
+
+    /* የግራ ጎን ማውጫ (Sidebar Nav) */
+    .sidebar { width: 260px; background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; justify-content: space-between; shrink: 0; }
+    .sidebar-header { padding: 20px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+    .nav-links { list-style: none; margin-top: 15px; }
+    .nav-links li button { width: 100%; padding: 14px 20px; background: none; border: none; color: #94a3b8; text-align: left; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+    .nav-links li button:hover, .nav-links li button.active { background-color: #1e293b; color: #38bdf8; border-left: 4px solid #38bdf8; }
+
+    /* ዋናው የይዘት ቦታ (Main View Area) */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    header { background-color: #ffffff; padding: 15px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .page-title { font-size: 1.3rem; font-weight: bold; color: #0f172a; }
+
+    .content-container { padding: 30px; flex: 1; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Cards and UI Elements */
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+    .card h2 { font-size: 1.2rem; color: #0f172a; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
+
+    .btn { background-color: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
     .btn:hover { background-color: #1d4ed8; }
-    .btn-danger { background-color: #dc2626; }
-    .btn-danger:hover { background-color: #b91c1c; }
-    input, select, textarea { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-    
-    /* ቨርቲካል ካላንደር ዲዛይን */
-    .timeline { position: relative; border-left: 3px solid #2563eb; padding-left: 20px; margin-left: 10px; }
-    .timeline-item { position: relative; margin-bottom: 20px; }
-    .timeline-item::before { content: ''; position: absolute; left: -27px; top: 5px; width: 12px; height: 12px; background: #2563eb; border-radius: 50%; }
-    .timeline-date { font-weight: bold; color: #1e40af; }
-    
-    /* የቻት ዲዛይን */
-    .chat-box { height: 250px; overflow-y: auto; border: 1px solid #e5e7eb; padding: 10px; border-radius: 5px; background: #fafafa; margin-bottom: 10px; }
-    .chat-msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; max-width: 80%; }
-    .chat-msg.me { background: #dbeafe; margin-left: auto; text-align: right; }
-    .chat-msg.other { background: #e5e7eb; }
+    .btn-danger { background-color: #ef4444; }
+    .btn-danger:hover { background-color: #dc2626; }
+    .btn-success { background-color: #10b981; }
+    .btn-success:hover { background-color: #059669; }
+
+    input, select, textarea { width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 16px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: #2563eb; ring: 2px #bfdbfe; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+    /* 1. ቨርቲካል ካላንደር */
+    .timeline { position: relative; border-left: 3px solid #2563eb; padding-left: 25px; margin-left: 15px; margin-top: 20px; }
+    .timeline-item { position: relative; margin-bottom: 30px; }
+    .timeline-item::before { content: ''; position: absolute; left: -32px; top: 4px; width: 14px; height: 14px; background: #2563eb; border-radius: 50%; border: 3px solid white; }
+    .timeline-date { font-weight: bold; color: #2563eb; font-size: 0.9rem; }
+    .timeline-title { font-size: 1.1rem; font-weight: bold; margin: 4px 0; }
+    .timeline-desc { color: #64748b; font-size: 0.9rem; }
+
+    /* 2. የቻት ዲዛይን */
+    .chat-box { height: 350px; overflow-y: auto; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; background: #f8fafc; margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { padding: 10px 14px; border-radius: 12px; max-width: 75%; font-size: 0.95rem; line-height: 1.4; }
+    .chat-msg.me { background: #2563eb; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .chat-msg.other { background: #e2e8f0; color: #0f172a; align-self: flex-start; border-bottom-left-radius: 2px; }
 
     /* Toast Notification */
-    #toast { visibility: hidden; min-width: 250px; background-color: #059669; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 100; right: 30px; top: 30px; font-size: 17px; }
+    #toast { visibility: hidden; min-width: 280px; background-color: #10b981; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; right: 30px; top: 30px; font-weight: bold; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
     #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-    @keyframes fadein { from {top: 0; opacity: 0;} to {top: 30px; opacity: 1;} }
-    @keyframes fadeout { from {top: 30px; opacity: 1;} to {top: 0; opacity: 0;} }
+    @keyframes fadein { from { top: 0; opacity: 0; } to { top: 30px; opacity: 1; } }
+    @keyframes fadeout { from { top: 30px; opacity: 1; } to { top: 0; opacity: 0; } }
+
+    /* File Storage List Table */
+    .file-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .file-table th, .file-table td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    .file-table th { background-color: #f8fafc; color: #64748b; font-size: 0.85rem; }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; height: auto; overflow: auto; }
+      .sidebar { width: 100%; }
+      .nav-links { display: flex; overflow-x: auto; }
+      .nav-links li button { whitespace: nowrap; }
+    }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>🎓 የተማሪዎች መድረክ (Student Portal)</h1>
-    <div>ተጠቃሚ፡ <strong>ደብረ ብርሃን ዩኒቨርሲቲ ተማሪ</strong></div>
-  </header>
-
-  <div class="container">
-    
-    <!-- የግራ ጎን ማውጫ / ቨርቲካል ካላንደር -->
-    <div class="sidebar">
-      <div class="card">
-        <h2>📅 የትምህርት ካላንደር (Vertical Timeline)</h2>
-        <div class="timeline" id="calendarTimeline">
-          <!-- የቀናት ዝርዝር በ JS ይጫናል -->
-        </div>
+  <!-- የግራ ጎን ማውጫ Menu -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-header">
+        🎓 የተማሪዎች መድረክ
       </div>
+      <ul class="nav-links">
+        <li><button class="active" onclick="switchTab('notesTab', this)">📝 ሾርት ኖቶች</button></li>
+        <li><button onclick="switchTab('filesTab', this)">📁 የፋይል ማከማቻ (IndexedDB)</button></li>
+        <li><button onclick="switchTab('chatTab', this)">💬 የተማሪዎች ቻት</button></li>
+        <li><button onclick="switchTab('calendarTab', this)">📅 ቨርቲካል ካላንደር</button></li>
+        <li><button onclick="switchTab('reminderTab', this)">⏰ የማስታወሻ አላርም</button></li>
+      </ul>
     </div>
+    <div style="padding: 20px; font-size: 0.8rem; color: #64748b; border-top: 1px solid #334155;">
+      ደብረ ብርሃን ዩኒቨርሲቲ • 2017/2026
+    </div>
+  </div>
 
-    <!-- ዋናው ክፍል -->
-    <div class="main-content">
+  <!-- ዋናው የይዘት ገጽ -->
+  <div class="main-wrapper">
+    <header>
+      <div class="page-title" id="pageTitle">📝 የሾርት ኖት ማዘጋጃ</div>
+      <div style="font-size: 0.9rem; color: #64748b;">ተጠቃሚ፡ <strong>ተማሪ</strong></div>
+    </header>
 
-      <!-- 1. ሾርት ኖቶች -->
-      <div class="card">
-        <h2>📝 የሾርት ኖት ማዘጋጃ እና ማስቀመጫ</h2>
-        <form id="noteForm">
-          <input type="text" id="noteTitle" placeholder="የርዕስ ስም (ምሳሌ፡ C++ OOP Pointers)" required>
-          <select id="noteSubject">
-            <option value="Computer Science">Computer Science</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Physics">Physics</option>
-          </select>
-          <textarea id="noteContent" rows="3" placeholder="አጭር ማስታወሻዎን እዚህ ይጻፉ..." required></textarea>
-          <button type="submit" class="btn">ኖት አስቀምጥ</button>
-        </form>
-        <hr style="margin: 15px 0;">
-        <h3>የተቀመጡ ኖቶች</h3>
-        <div class="grid" id="notesList" style="margin-top: 10px;"></div>
-      </div>
+    <div class="content-container">
 
-      <!-- 2. ፋይል ማኔጀር -->
-      <div class="card">
-        <h2>📁 የፋይል ማስቀመጫ (File Storage)</h2>
-        <form id="fileForm">
-          <input type="text" id="fileName" placeholder="የፋይሉ ስም" required>
-          <input type="file" id="fileInput" required>
-          <button type="submit" class="btn">ፋይል ስቀል (Upload)</button>
-        </form>
-        <hr style="margin: 15px 0;">
-        <h3>የተሰቀሉ ፋይሎች</h3>
-        <div id="filesList" style="margin-top: 10px;"></div>
-      </div>
-
-      <!-- 3. የተማሪዎች ቻት -->
-      <div class="card">
-        <h2>💬 የተማሪዎች ቻት መድረክ (Peer Chat)</h2>
-        <div class="chat-box" id="chatBox">
-          <div class="chat-msg other"><strong>አበበ፡</strong> ሰላም! የትርጉም C++ ኖት አለህ?</div>
-          <div class="chat-msg me"><strong>እኔ፡</strong> አዎ! ኖት ሴክሽን ውስጥ አስቀምጨዋለሁ ማየት ትችላለህ።</div>
+      <!-- 1. ሾርት ኖቶች ገጽ -->
+      <div id="notesTab" class="tab-content active">
+        <div class="card">
+          <h2>አዲስ ሾርት ኖት ያዘጋጁ</h2>
+          <form id="noteForm">
+            <input type="text" id="noteTitle" placeholder="የርዕስ ስም (ምሳሌ፡ C++ Polymorphism)" required>
+            <select id="noteSubject">
+              <option value="Computer Science">Computer Science</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Physics">Physics</option>
+            </select>
+            <textarea id="noteContent" rows="4" placeholder="አጭር ማስታወሻዎን እዚህ ይጻፉ..." required></textarea>
+            <button type="submit" class="btn">ኖት አስቀምጥ</button>
+          </form>
         </div>
-        <form id="chatForm" style="display: flex; gap: 10px;">
-          <input type="text" id="chatInput" placeholder="መልእክት ይጻፉ..." style="margin:0;" required>
-          <button type="submit" class="btn">ላክ</button>
-        </form>
+
+        <div class="card">
+          <h2>የተቀመጡ ኖቶች</h2>
+          <div class="grid" id="notesList"></div>
+        </div>
       </div>
 
-      <!-- 4. ማስታወሻ እና አላርም ማስገቢያ ፎርም -->
-      <div class="card">
-        <h2>⏰ የማስታወሻ እና አላርም ቅንብር (Reminder Form)</h2>
-        <form id="reminderForm">
-          <input type="text" id="remTitle" placeholder="የማስታወሻው ርዕስ (ምሳሌ፡ የትምህርት ፕሮጀክት ማስረከቢያ)" required>
-          <label>የፈተና/የቀጠሮው ቀን እና ሰዓት፡</label>
-          <input type="datetime-local" id="remDateTime" required>
-          
-          <label><strong>ከስንት ሰዓት/ደቂቃ በፊት ላስታውስህ?</strong></label>
-          <select id="remBefore">
-            <option value="15">ከ 15 ደቂቃ በፊት</option>
-            <option value="30">ከ 30 ደቂቃ በፊት</option>
-            <option value="60">ከ 1 ሰዓት በፊት</option>
-            <option value="1440">ከ 1 ቀን (24 ሰዓት) በፊት</option>
-          </select>
+      <!-- 2. ፋይል ማስቀመጫ ገጽ (IndexedDB Storage) -->
+      <div id="filesTab" class="tab-content">
+        <div class="card">
+          <h2>እውነተኛ የፋይል ማስቀመጫ (IndexedDB Binary Storage)</h2>
+          <form id="fileForm">
+            <input type="text" id="fileCustomName" placeholder="የፋይሉ መገለጫ ስም (ምሳሌ፡ C++ Chapter 1 PDF)" required>
+            <label style="font-size: 0.85rem; color: #64748b;">ፋይል ይምረጡ (PDF, Image, Word, Zip):</label>
+            <input type="file" id="fileInput" required>
+            <button type="submit" class="btn btn-success">ፋይል በቋሚነት አስቀምጥ (Upload)</button>
+          </form>
+        </div>
 
-          <button type="submit" class="btn">ማስታወሻ ያዝ (Set Reminder)</button>
-        </form>
-        <hr style="margin: 15px 0;">
-        <h3>የተያዙ ማስታወሻዎች</h3>
-        <div id="remindersList"></div>
+        <div class="card">
+          <h2>በስልኩ/ኮምፒውተሩ ማከማቻ ውስጥ ያሉ ፋይሎች</h2>
+          <table class="file-table">
+            <thead>
+              <tr>
+                <th>የፋይል ስም</th>
+                <th>ዓይነት</th>
+                <th>መጠን</th>
+                <th>ድርጊት</th>
+              </tr>
+            </thead>
+            <tbody id="filesListTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. የተማሪዎች ቻት ገጽ -->
+      <div id="chatTab" class="tab-content">
+        <div class="card">
+          <h2>💬 የተማሪዎች የቡድን ውይይት (Peer Chat)</h2>
+          <div class="chat-box" id="chatBox">
+            <div class="chat-msg other"><strong>አበበ፡</strong> ሰላም! የትርጉም C++ ኖት የትኛው ክፍል አለ?</div>
+            <div class="chat-msg me"><strong>እኔ፡</strong> ሰላም! ኖቶች ገጽ ላይ አስቀምጨዋለሁ ማየት ትችላለህ።</div>
+          </div>
+          <form id="chatForm" style="display: flex; gap: 10px;">
+            <input type="text" id="chatInput" placeholder="መልእክት ይጻፉ..." style="margin:0;" required>
+            <button type="submit" class="btn">ላክ</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- 4. ቨርቲካል ካላንደር ገጽ -->
+      <div id="calendarTab" class="tab-content">
+        <div class="card">
+          <h2>📅 የትምህርት ካላንደር እና ፕሮግራሞች (Vertical Timeline)</h2>
+          <p style="color: #64748b; font-size: 0.9rem;">የቀናት ዝርዝር እና የፈተና/የአሳይመንት ቀናቶች በቁልቁል ቅደም ተከተል፡</p>
+          <div class="timeline" id="calendarTimeline"></div>
+        </div>
+      </div>
+
+      <!-- 5. የማስታወሻ እና አላርም ቅንብር ገጽ -->
+      <div id="reminderTab" class="tab-content">
+        <div class="card">
+          <h2>⏰ የማስታወሻ አላርም ማስገቢያ ፎርም</h2>
+          <form id="reminderForm">
+            <input type="text" id="remTitle" placeholder="የማስታወሻው ርዕስ (ምሳሌ፡ የ C++ Assignment ማስረከቢያ)" required>
+            <label style="font-size: 0.85rem; color: #64748b;">የቀጠሮው/የፈተናው ቀን እና ሰዓት፡</label>
+            <input type="datetime-local" id="remDateTime" required>
+
+            <label style="font-size: 0.85rem; color: #64748b;"><strong>ከስንት ሰዓት/ደቂቃ በፊት ላስታውስህ?</strong></label>
+            <select id="remBefore">
+              <option value="15">ከ 15 ደቂቃ በፊት</option>
+              <option value="30">ከ 30 ደቂቃ በፊት</option>
+              <option value="60">ከ 1 ሰዓት በፊት</option>
+              <option value="1440">ከ 1 ቀን (24 ሰዓት) በፊት</option>
+            </select>
+
+            <button type="submit" class="btn">ማስታወሻ ያዝ (Set Reminder)</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>የተያዙ ማስታወሻዎች</h2>
+          <div id="remindersList"></div>
+        </div>
       </div>
 
     </div>
   </div>
 
-  <!-- Toast Notification Box -->
-  <div id="toast">🔔 ማስታወሻ!</div>
+  <div id="toast">🔔 ማስታወቂያ!</div>
 
   <script>
-    // 1. ቨርቲካል ካላንደር መረጃ ማሳያ
-    const calendarEvents = [
-      { date: "ጥቅምት 12, 2017", title: "የ C++ Assignment 1 ማስረከቢያ" },
-      { date: "ጥቅምት 15, 2017", title: "የ Mathematics Mid Exam" },
-      { date: "ጥቅምት 20, 2017", title: "የ 3D Blender Project Demo" }
-    ];
+    // Tab Navigation Logic
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-links button').forEach(btn => btn.classList.remove('active'));
 
-    const calendarContainer = document.getElementById('calendarTimeline');
-    calendarEvents.forEach(ev => {
-      calendarContainer.innerHTML += `
-        <div class="timeline-item">
-          <div class="timeline-date">${ev.date}</div>
-          <div>${ev.title}</div>
-        </div>
-      `;
-    });
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
 
-    // 2. ሾርት ኖት ማኔጀር
+      const titleMap = {
+        'notesTab': '📝 የሾርት ኖት ማዘጋጃ',
+        'filesTab': '📁 የፋይል ማከማቻ (IndexedDB)',
+        'chatTab': '💬 የተማሪዎች ቻት መድረክ',
+        'calendarTab': '📅 ቨርቲካል ካላንደር',
+        'reminderTab': '⏰ የማስታወሻ አላርም'
+      };
+      document.getElementById('pageTitle').innerText = titleMap[tabId];
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.innerText = msg;
+      toast.className = "show";
+      setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+
+    // 1. ሾርት ኖቶች (LocalStorage)
     const noteForm = document.getElementById('noteForm');
     const notesList = document.getElementById('notesList');
-    let notes = [];
+    let notes = JSON.parse(localStorage.getItem('student_notes') || '[]');
+
+    function renderNotes() {
+      notesList.innerHTML = '';
+      if(notes.length === 0) {
+        notesList.innerHTML = `<p style="color:#64748b;">ምንም የተቀመጠ ኖት የለም።</p>`;
+        return;
+      }
+      notes.forEach((n, idx) => {
+        notesList.innerHTML += `
+          <div style="background: #f8fafc; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <span style="font-size: 0.75rem; background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 4px; font-weight:bold;">${n.subject}</span>
+            <h4 style="margin: 8px 0;">${n.title}</h4>
+            <p style="font-size: 0.9rem; color: #475569; margin-bottom:10px;">${n.content}</p>
+            <button class="btn btn-danger" style="padding: 4px 8px; font-size:0.75rem;" onclick="deleteNote(${idx})">ሰርዝ</button>
+          </div>
+        `;
+      });
+    }
 
     noteForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -164,63 +266,161 @@
       const subject = document.getElementById('noteSubject').value;
       const content = document.getElementById('noteContent').value;
 
-      const note = { id: Date.now(), title, subject, content };
-      notes.push(note);
+      notes.push({ title, subject, content });
+      localStorage.setItem('student_notes', JSON.stringify(notes));
       renderNotes();
       noteForm.reset();
       showToast("ኖት በተሳካ ሁኔታ ተቀምጧል!");
     });
 
-    function renderNotes() {
-      notesList.innerHTML = '';
-      notes.forEach(n => {
-        notesList.innerHTML += `
-          <div style="background: #f9fafb; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-            <span style="font-size: 12px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px;">${n.subject}</span>
-            <h4 style="margin: 5px 0;">${n.title}</h4>
-            <p style="font-size: 14px; color: #4b5563;">${n.content}</p>
-          </div>
-        `;
-      });
+    function deleteNote(idx) {
+      notes.splice(idx, 1);
+      localStorage.setItem('student_notes', JSON.stringify(notes));
+      renderNotes();
     }
+    renderNotes();
 
-    // 3. ፋይል ማስቀመጫ (File Storage)
+    // 2. INDEXEDDB REAL FILE STORAGE ENGINE
+    let db;
+    const request = indexedDB.open("StudentPortalDB", 1);
+
+    request.onupgradeneeded = (e) => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains("files")) {
+        db.createObjectStore("files", { keyPath: "id", autoIncrement: true });
+      }
+    };
+
+    request.onsuccess = (e) => {
+      db = e.target.result;
+      loadFilesFromDB();
+    };
+
     const fileForm = document.getElementById('fileForm');
-    const filesList = document.getElementById('filesList');
-
     fileForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const name = document.getElementById('fileName').value;
+      const customName = document.getElementById('fileCustomName').value;
       const fileInput = document.getElementById('fileInput');
-      const fileName = fileInput.files[0] ? fileInput.files[0].name : "document.pdf";
+      const file = fileInput.files[0];
 
-      filesList.innerHTML += `
-        <div style="display: flex; justify-content: space-between; background: #f3f4f6; padding: 8px; border-radius: 4px; margin-bottom: 5px;">
-          <span>📄 <strong>${name}</strong> (${fileName})</span>
-          <a href="#" onclick="alert('ፋይሉ ወርዷል!')" style="color: #2563eb; text-decoration: none;">ወርድ (Download)</a>
-        </div>
-      `;
-      fileForm.reset();
-      showToast("ፋይል በተሳካ ሁኔታ ተስቅሏል!");
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const fileRecord = {
+          name: customName,
+          fileName: file.name,
+          type: file.type,
+          size: (file.size / 1024 / 1024).toFixed(2) + " MB",
+          data: evt.target.result
+        };
+
+        const tx = db.transaction("files", "readwrite");
+        const store = tx.objectStore("files");
+        store.add(fileRecord);
+
+        tx.oncomplete = () => {
+          loadFilesFromDB();
+          fileForm.reset();
+          showToast("ፋይሉ በ IndexedDB ውስጥ በቋሚነት ተስቅሏል!");
+        };
+      };
+      reader.readAsDataURL(file);
     });
 
-    // 4. ቻት መለዋወጫ
+    function loadFilesFromDB() {
+      const tableBody = document.getElementById('filesListTable');
+      tableBody.innerHTML = '';
+
+      const tx = db.transaction("files", "readonly");
+      const store = tx.objectStore("files");
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const files = request.result;
+        if (files.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">ምንም ፋይል አልተሰቀለም።</td></tr>`;
+          return;
+        }
+
+        files.forEach(f => {
+          tableBody.innerHTML += `
+            <tr>
+              <td><strong>${f.name}</strong><br><small style="color:#64748b">${f.fileName}</small></td>
+              <td>${f.type || 'Document'}</td>
+              <td>${f.size}</td>
+              <td>
+                <a href="${f.data}" download="${f.fileName}" class="btn btn-success" style="text-decoration:none; padding:4px 8px; font-size:0.8rem;">ወርድ (Download)</a>
+                <button class="btn btn-danger" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteFileDB(${f.id})">ሰርዝ</button>
+              </td>
+            </tr>
+          `;
+        });
+      };
+    }
+
+    function deleteFileDB(id) {
+      const tx = db.transaction("files", "readwrite");
+      tx.objectStore("files").delete(id);
+      tx.oncomplete = () => {
+        loadFilesFromDB();
+        showToast("ፋይሉ ተሰርዟል!");
+      };
+    }
+
+    // 3. ቻት
     const chatForm = document.getElementById('chatForm');
     const chatBox = document.getElementById('chatBox');
-
     chatForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const input = document.getElementById('chatInput');
-      if (input.value.trim() !== "") {
+      if(input.value.trim() !== "") {
         chatBox.innerHTML += `<div class="chat-msg me"><strong>እኔ፡</strong> ${input.value}</div>`;
         input.value = '';
         chatBox.scrollTop = chatBox.scrollHeight;
       }
     });
 
-    // 5. የማስታወሻ አላርም (Reminder System)
+    // 4. ቨርቲካል ካላንደር
+    const events = [
+      { date: "ጥቅምት 12, 2017", title: "የ C++ Assignment 1 ማስረከቢያ", desc: "OOP Inheritance ና Polymorphism ምዕራፍ" },
+      { date: "ጥቅምት 18, 2017", title: "የ Mid Exam ሳምንት", desc: "ሁሉም ትምህርቶች የመጀመሪያ አጋማሽ ፈተና" },
+      { date: "ጥቅምት 25, 2017", title: "የ 3D Blender Modeling Demo", desc: "በቤተ-መጽሐፍት ኮምፒውተር ክፍል" }
+    ];
+    const timeline = document.getElementById('calendarTimeline');
+    events.forEach(ev => {
+      timeline.innerHTML += `
+        <div class="timeline-item">
+          <div class="timeline-date">${ev.date}</div>
+          <div class="timeline-title">${ev.title}</div>
+          <div class="timeline-desc">${ev.desc}</div>
+        </div>
+      `;
+    });
+
+    // 5. የማስታወሻ አላርም
     const reminderForm = document.getElementById('reminderForm');
     const remindersList = document.getElementById('remindersList');
+    let reminders = JSON.parse(localStorage.getItem('student_reminders') || '[]');
+
+    function renderReminders() {
+      remindersList.innerHTML = '';
+      if(reminders.length === 0) {
+        remindersList.innerHTML = `<p style="color:#64748b;">ምንም የተቀጠረ ማስታወሻ የለም።</p>`;
+        return;
+      }
+      reminders.forEach((r, idx) => {
+        remindersList.innerHTML += `
+          <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 10px; border-radius: 4px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong>⏰ ${r.title}</strong><br>
+              <small style="color:#b45309">ቀን፡ ${r.dateTime} | ከ ${r.before} ደቂቃ በፊት ያሳውቃል</small>
+            </div>
+            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="deleteReminder(${idx})">ሰርዝ</button>
+          </div>
+        `;
+      });
+    }
 
     reminderForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -228,24 +428,19 @@
       const dateTime = document.getElementById('remDateTime').value;
       const before = document.getElementById('remBefore').value;
 
-      remindersList.innerHTML += `
-        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px; margin-bottom: 8px;">
-          <strong>⏰ ${title}</strong><br>
-          <small>ቀን፡ ${dateTime} | ማስታወቂያ፡ ከ ${before} ደቂቃ በፊት</small>
-        </div>
-      `;
-
-      showToast(`ማስታወሻ ተይዟል! ከ ${before} ደቂቃ በፊት ያሳውቅዎታል።`);
+      reminders.push({ title, dateTime, before });
+      localStorage.setItem('student_reminders', JSON.stringify(reminders));
+      renderReminders();
       reminderForm.reset();
+      showToast(`ማስታወሻ ተይዟል! ከ ${before} ደቂቃ በፊት ያሳውቅዎታል።`);
     });
 
-    // Toast ማሳወቂያ ማሳያ
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.innerText = message;
-      toast.className = "show";
-      setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+    function deleteReminder(idx) {
+      reminders.splice(idx, 1);
+      localStorage.setItem('student_reminders', JSON.stringify(reminders));
+      renderReminders();
     }
+    renderReminders();
   </script>
 </body>
 </html>
