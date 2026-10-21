@@ -1,928 +1,251 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>የተማሪዎች ፖርታል - Student Hub</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter / Noto Sans Ethiopic -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Noto Sans Ethiopic', 'Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Noto Sans Ethiopic', 'Inter', sans-serif;
-        }
-        /* Custom scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 9999px;
-        }
-        .dark ::-webkit-scrollbar-thumb {
-            background: #475569;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>የተማሪዎች መድረክ (Student Portal)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f3f4f6; color: #1f2937; line-height: 1.5; }
+    header { background-color: #1e40af; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 1.5rem; }
+    .container { display: flex; flex-wrap: wrap; max-width: 1400px; margin: 20px auto; gap: 20px; padding: 0 10px; }
+    .sidebar { flex: 1; min-width: 280px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .main-content { flex: 3; min-width: 320px; display: flex; flex-direction: column; gap: 20px; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .card h2 { font-size: 1.25rem; color: #1e40af; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; }
+    .btn { background-color: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .btn:hover { background-color: #1d4ed8; }
+    .btn-danger { background-color: #dc2626; }
+    .btn-danger:hover { background-color: #b91c1c; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+    
+    /* ቨርቲካል ካላንደር ዲዛይን */
+    .timeline { position: relative; border-left: 3px solid #2563eb; padding-left: 20px; margin-left: 10px; }
+    .timeline-item { position: relative; margin-bottom: 20px; }
+    .timeline-item::before { content: ''; position: absolute; left: -27px; top: 5px; width: 12px; height: 12px; background: #2563eb; border-radius: 50%; }
+    .timeline-date { font-weight: bold; color: #1e40af; }
+    
+    /* የቻት ዲዛይን */
+    .chat-box { height: 250px; overflow-y: auto; border: 1px solid #e5e7eb; padding: 10px; border-radius: 5px; background: #fafafa; margin-bottom: 10px; }
+    .chat-msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; max-width: 80%; }
+    .chat-msg.me { background: #dbeafe; margin-left: auto; text-align: right; }
+    .chat-msg.other { background: #e5e7eb; }
+
+    /* Toast Notification */
+    #toast { visibility: hidden; min-width: 250px; background-color: #059669; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 100; right: 30px; top: 30px; font-size: 17px; }
+    #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    @keyframes fadein { from {top: 0; opacity: 0;} to {top: 30px; opacity: 1;} }
+    @keyframes fadeout { from {top: 30px; opacity: 1;} to {top: 0; opacity: 0;} }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
+<body>
 
-    <!-- Notification Toast Container -->
-    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
+  <header>
+    <h1>🎓 የተማሪዎች መድረክ (Student Portal)</h1>
+    <div>ተጠቃሚ፡ <strong>ደብረ ብርሃን ዩኒቨርሲቲ ተማሪ</strong></div>
+  </header>
 
-    <div class="flex h-screen overflow-hidden">
-        
-        <!-- Sidebar Navigation -->
-        <aside class="w-20 md:w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col justify-between transition-all duration-300 z-20">
-            <div>
-                <!-- App Logo / Title -->
-                <div class="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-700 gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md flex-shrink-0">
-                        ተ
-                    </div>
-                    <div class="hidden md:block">
-                        <h1 class="font-bold text-lg leading-tight text-slate-800 dark:text-white">ተማሪ ፖርታል</h1>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">የትምህርት መረብ</p>
-                    </div>
-                </div>
-
-                <!-- Nav items -->
-                <nav class="p-3 space-y-1">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition font-medium bg-sky-50 dark:bg-slate-700 text-sky-600 dark:text-sky-400">
-                        <i class="fa-solid fa-chart-pie text-lg w-6 text-center"></i>
-                        <span class="hidden md:inline">ዳሽቦርድ (ዋና ገጽ)</span>
-                    </button>
-                    <button onclick="switchTab('notes')" id="nav-notes" class="nav-btn w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50">
-                        <i class="fa-solid fa-book-open text-lg w-6 text-center"></i>
-                        <span class="hidden md:inline">ሾርት ኖት እና ፋይሎች</span>
-                    </button>
-                    <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50">
-                        <i class="fa-solid fa-comments text-lg w-6 text-center"></i>
-                        <span class="hidden md:inline">የተማሪዎች ቻት</span>
-                        <span class="hidden md:inline-block ml-auto bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">3</span>
-                    </button>
-                    <button onclick="switchTab('schedule')" id="nav-schedule" class="nav-btn w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50">
-                        <i class="fa-solid fa-calendar-week text-lg w-6 text-center"></i>
-                        <span class="hidden md:inline">ቀን መቁጠሪያ & መርሃግብር</span>
-                    </button>
-                </nav>
-            </div>
-
-            <!-- Dark Mode Toggle & User Profile -->
-            <div class="p-3 border-t border-slate-200 dark:border-slate-700">
-                <button id="theme-toggle" onclick="toggleDarkMode()" class="w-full flex items-center justify-center md:justify-start gap-3 px-3 py-2.5 mb-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
-                    <i id="theme-icon" class="fa-solid fa-moon text-lg w-6 text-center"></i>
-                    <span id="theme-text" class="hidden md:inline text-sm font-medium">ጨለማ ሞድ</span>
-                </button>
-                <div class="flex items-center gap-3 px-2 py-2">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="ተማሪ" class="w-9 h-9 rounded-full object-cover ring-2 ring-sky-500">
-                    <div class="hidden md:block overflow-hidden">
-                        <p class="text-sm font-semibold truncate">ሰላማዊት አበበ</p>
-                        <p class="text-xs text-slate-500 truncate">Computer Science - 3rd Yr</p>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-100/70 dark:bg-slate-900/50">
-            
-            <!-- Header bar -->
-            <header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 flex items-center justify-between z-10">
-                <div class="flex items-center gap-4">
-                    <h2 id="page-title" class="text-xl font-bold text-slate-800 dark:text-white">ዋና ዳሽቦርድ</h2>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="openReminderModal()" class="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-sky-500/20 transition transform active:scale-95">
-                        <i class="fa-solid fa-bell-plus"></i>
-                        <span class="hidden sm:inline">አዲስ ማስታወሻ ቅጠር</span>
-                    </button>
-                </div>
-            </header>
-
-            <!-- Dynamic Views Container -->
-            <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-
-                <!-- 1. DASHBOARD OVERVIEW TAB -->
-                <div id="tab-dashboard" class="tab-content space-y-6">
-                    <!-- Welcome Card -->
-                    <div class="bg-gradient-to-r from-sky-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                        <div class="relative z-10 max-w-xl">
-                            <h2 class="text-2xl font-bold mb-2">እንኳን ደህና መጡ፣ ሰላማዊት! 👋</h2>
-                            <p class="text-sky-100 text-sm leading-relaxed">ዛሬ 3 ቀጠሮዎች እና 2 የሚረከቡ የቤት ስራዎች አሉዎት። ኖቶችዎን ማደራጀት ወይም ከጓደኞችዎ ጋር ውይይት ማድረግ ይችላሉ።</p>
-                        </div>
-                        <div class="absolute -right-10 -bottom-10 opacity-15 text-white">
-                            <i class="fa-solid fa-graduation-cap text-[200px]"></i>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Quick Stats / Overview -->
-                        <div class="lg:col-span-2 space-y-6">
-                            <!-- Quick Short Notes Section -->
-                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                        <i class="fa-solid fa-sticky-note text-amber-500"></i> የቅርብ ሾርት ኖቶች
-                                    </h3>
-                                    <button onclick="switchTab('notes')" class="text-xs text-sky-600 dark:text-sky-400 font-medium hover:underline">ሁሉንም እይ →</button>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="recent-notes-grid">
-                                    <!-- Rendered dynamically -->
-                                </div>
-                            </div>
-
-                            <!-- Recent Shared Files Section -->
-                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                        <i class="fa-solid fa-folder-open text-sky-500"></i> የተስቀሉ ፋይሎች
-                                    </h3>
-                                    <button onclick="switchTab('notes')" class="text-xs text-sky-600 dark:text-sky-400 font-medium hover:underline">ፋይል ጨምር →</button>
-                                </div>
-                                <div class="divide-y divide-slate-100 dark:divide-slate-700/50" id="recent-files-list">
-                                    <!-- Rendered dynamically -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Mini Vertical Timeline Preview -->
-                        <div class="space-y-6">
-                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                        <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i> የቀረቡ መርሃግብሮች
-                                    </h3>
-                                    <button onclick="switchTab('schedule')" class="text-xs text-sky-600 dark:text-sky-400 font-medium hover:underline">ካላንደር →</button>
-                                </div>
-                                <div class="relative border-l-2 border-slate-200 dark:border-slate-700 ml-3 space-y-6 py-1" id="mini-vertical-timeline">
-                                    <!-- Dynamic Items -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. SHORT NOTES & FILE STORAGE TAB -->
-                <div id="tab-notes" class="tab-content hidden space-y-6">
-                    <!-- Top Bar Filters and Actions -->
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0" id="category-filters">
-                            <button onclick="filterNotes('all')" class="cat-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-sky-500 text-white whitespace-nowrap">ሁሉም</button>
-                            <button onclick="filterNotes('Computer Science')" class="cat-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 whitespace-nowrap">ኮምፒውተር ሳይንስ</button>
-                            <button onclick="filterNotes('Mathematics')" class="cat-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 whitespace-nowrap">ማቲማቲክስ</button>
-                            <button onclick="filterNotes('Physics')" class="cat-filter-btn px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 hover:bg-slate-200 whitespace-nowrap">ፊዚክስ</button>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="openAddNoteModal()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition">
-                                <i class="fa-solid fa-plus"></i> አዲስ ኖት ፃፍ
-                            </button>
-                            <button onclick="openFileUploadModal()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> ፋይል ስቀል
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Main Grid split: Notes Left, Files Right -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Notes Collection -->
-                        <div class="space-y-4">
-                            <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-                                <i class="fa-solid fa-pen-to-square text-amber-500"></i> የኔ ሾርት ኖቶች (Short Notes)
-                            </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="all-notes-grid">
-                                <!-- Dynamically filled -->
-                            </div>
-                        </div>
-
-                        <!-- Storage Manager & Files -->
-                        <div class="space-y-4">
-                            <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-                                <i class="fa-solid fa-box-archive text-sky-500"></i> የተመዘገቡ ፋይሎች (File Storage)
-                            </h3>
-                            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3" id="all-files-container">
-                                <!-- Dynamically filled -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. PEER CHAT / MESSAGING SYSTEM TAB -->
-                <div id="tab-chat" class="tab-content hidden h-[calc(100vh-7rem)] flex flex-col">
-                    <div class="flex-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex overflow-hidden">
-                        
-                        <!-- Chat Contacts Sidebar -->
-                        <div class="w-full sm:w-80 border-r border-slate-200 dark:border-slate-700 flex flex-col bg-slate-50/50 dark:bg-slate-800/50">
-                            <!-- Search -->
-                            <div class="p-3 border-b border-slate-200 dark:border-slate-700">
-                                <div class="relative">
-                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
-                                    <input type="text" placeholder="ጓደኛ ወይም ግሩፕ ፈልግ..." class="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                                </div>
-                            </div>
-                            <!-- Contact List -->
-                            <div class="flex-1 overflow-y-auto space-y-1 p-2" id="chat-contacts-list">
-                                <!-- Dynamically Rendered Contacts -->
-                            </div>
-                        </div>
-
-                        <!-- Chat Active Window -->
-                        <div class="hidden sm:flex flex-1 flex-col h-full bg-white dark:bg-slate-800">
-                            <!-- Chat Header -->
-                            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="relative">
-                                        <img id="active-chat-avatar" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80" class="w-10 h-10 rounded-full object-cover">
-                                        <span class="w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full absolute bottom-0 right-0"></span>
-                                    </div>
-                                    <div>
-                                        <h4 id="active-chat-name" class="font-bold text-sm text-slate-800 dark:text-white">ዮናስ ከበደ</h4>
-                                        <p class="text-xs text-emerald-500">ኦንላይን ነው</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3 text-slate-500 text-lg">
-                                    <button class="hover:text-sky-500"><i class="fa-solid fa-phone"></i></button>
-                                    <button class="hover:text-sky-500"><i class="fa-solid fa-video"></i></button>
-                                    <button class="hover:text-sky-500"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                                </div>
-                            </div>
-
-                            <!-- Messages Area -->
-                            <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/30 dark:bg-slate-900/30" id="chat-messages-container">
-                                <!-- Dynamically Rendered Messages -->
-                            </div>
-
-                            <!-- Chat Input Bar -->
-                            <div class="p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-                                <form id="chat-form" onsubmit="sendMessage(event)" class="flex items-center gap-2">
-                                    <button type="button" onclick="triggerChatFileAttach()" class="p-2 text-slate-500 hover:text-sky-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
-                                        <i class="fa-solid fa-paperclip text-lg"></i>
-                                    </button>
-                                    <input type="text" id="chat-input" placeholder="መልእክት እዚህ ፃፉ..." class="flex-1 px-4 py-2.5 text-sm rounded-xl bg-slate-100 dark:bg-slate-700 border-0 focus:ring-2 focus:ring-sky-500 dark:text-white">
-                                    <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white p-2.5 rounded-xl shadow-md transition flex items-center justify-center">
-                                        <i class="fa-solid fa-paper-plane"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- 4. VERTICAL CALENDAR & DAILY SCHEDULE TAB -->
-                <div id="tab-schedule" class="tab-content hidden space-y-6">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-800 dark:text-white">የቁልቁል (Vertical) ቀን መቁጠሪያ እና መርሃግብር</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">ቀናቶች በቅደም ተከተል ተደርድረው የትምህርት እንቅስቃሴዎን ያሳያሉ።</p>
-                        </div>
-                        <button onclick="openReminderModal()" class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm transition">
-                            <i class="fa-solid fa-calendar-plus mr-1"></i> አዲስ ኩዊዝ / ፕሮግራም መዝግብ
-                        </button>
-                    </div>
-
-                    <!-- Vertical Days & Schedules Container -->
-                    <div class="space-y-4" id="vertical-calendar-container">
-                        <!-- Dynamically Generated Days with Vertical Layout -->
-                    </div>
-                </div>
-
-            </div>
-        </main>
-    </div>
-
-    <!-- MODAL: ADD / EDIT SHORT NOTE -->
-    <div id="modal-note" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-            <div class="flex justify-between items-center border-b pb-3 dark:border-slate-700">
-                <h3 class="font-bold text-slate-800 dark:text-white text-lg">አዲስ ሾርት ኖት ማዘጋጃ</h3>
-                <button onclick="closeModal('modal-note')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <form onsubmit="saveNote(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የኖቱ ርዕስ</label>
-                    <input type="text" id="note-title" required placeholder="ለምሳሌ፡ Algorithms Intro" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የትምህርት ዓይነት (Category)</label>
-                    <select id="note-category" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500">
-                        <option value="Computer Science">Computer Science</option>
-                        <option value="Mathematics">Mathematics</option>
-                        <option value="Physics">Physics</option>
-                        <option value="General">ጠቅላላ (General)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ዝርዝር ማስታወሻ</label>
-                    <textarea id="note-content" rows="4" required placeholder="ዋና ዋና ነጥቦችን እዚህ ፃፉ..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500"></textarea>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModal('modal-note')" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">ሰርዝ</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-600 text-white">አስቀምጥ</button>
-                </div>
-            </form>
+  <div class="container">
+    
+    <!-- የግራ ጎን ማውጫ / ቨርቲካል ካላንደር -->
+    <div class="sidebar">
+      <div class="card">
+        <h2>📅 የትምህርት ካላንደር (Vertical Timeline)</h2>
+        <div class="timeline" id="calendarTimeline">
+          <!-- የቀናት ዝርዝር በ JS ይጫናል -->
         </div>
+      </div>
     </div>
 
-    <!-- MODAL: UPLOAD FILE MANAGER -->
-    <div id="modal-file" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-            <div class="flex justify-between items-center border-b pb-3 dark:border-slate-700">
-                <h3 class="font-bold text-slate-800 dark:text-white text-lg">ፋይል ማስቀመጫ (Upload File)</h3>
-                <button onclick="closeModal('modal-file')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <form onsubmit="saveFileUpload(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የፋይሉ ስም</label>
-                    <input type="text" id="file-name" required placeholder="ለምሳሌ፡ Ch-3 Data Structures PDF" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የፋይል ዓይነት</label>
-                    <select id="file-type" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500">
-                        <option value="pdf">PDF ሰነድ</option>
-                        <option value="docx">Word Document</option>
-                        <option value="image">ምስል (Image)</option>
-                        <option value="zip">ZIP ማህደር</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ፋይል ይምረጡ</label>
-                    <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center hover:border-sky-500 transition cursor-pointer" onclick="document.getElementById('file-input-dummy').click()">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-500 mb-2"></i>
-                        <p class="text-xs text-slate-500" id="file-chosen-text">ፋይል እዚህ ይጎትቱ ወይም ይጫኑ</p>
-                        <input type="file" id="file-input-dummy" class="hidden" onchange="updateFileNamePreview(this)">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModal('modal-file')" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">ሰርዝ</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-600 text-white">ስቀል (Upload)</button>
-                </div>
-            </form>
+    <!-- ዋናው ክፍል -->
+    <div class="main-content">
+
+      <!-- 1. ሾርት ኖቶች -->
+      <div class="card">
+        <h2>📝 የሾርት ኖት ማዘጋጃ እና ማስቀመጫ</h2>
+        <form id="noteForm">
+          <input type="text" id="noteTitle" placeholder="የርዕስ ስም (ምሳሌ፡ C++ OOP Pointers)" required>
+          <select id="noteSubject">
+            <option value="Computer Science">Computer Science</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Physics">Physics</option>
+          </select>
+          <textarea id="noteContent" rows="3" placeholder="አጭር ማስታወሻዎን እዚህ ይጻፉ..." required></textarea>
+          <button type="submit" class="btn">ኖት አስቀምጥ</button>
+        </form>
+        <hr style="margin: 15px 0;">
+        <h3>የተቀመጡ ኖቶች</h3>
+        <div class="grid" id="notesList" style="margin-top: 10px;"></div>
+      </div>
+
+      <!-- 2. ፋይል ማኔጀር -->
+      <div class="card">
+        <h2>📁 የፋይል ማስቀመጫ (File Storage)</h2>
+        <form id="fileForm">
+          <input type="text" id="fileName" placeholder="የፋይሉ ስም" required>
+          <input type="file" id="fileInput" required>
+          <button type="submit" class="btn">ፋይል ስቀል (Upload)</button>
+        </form>
+        <hr style="margin: 15px 0;">
+        <h3>የተሰቀሉ ፋይሎች</h3>
+        <div id="filesList" style="margin-top: 10px;"></div>
+      </div>
+
+      <!-- 3. የተማሪዎች ቻት -->
+      <div class="card">
+        <h2>💬 የተማሪዎች ቻት መድረክ (Peer Chat)</h2>
+        <div class="chat-box" id="chatBox">
+          <div class="chat-msg other"><strong>አበበ፡</strong> ሰላም! የትርጉም C++ ኖት አለህ?</div>
+          <div class="chat-msg me"><strong>እኔ፡</strong> አዎ! ኖት ሴክሽን ውስጥ አስቀምጨዋለሁ ማየት ትችላለህ።</div>
         </div>
+        <form id="chatForm" style="display: flex; gap: 10px;">
+          <input type="text" id="chatInput" placeholder="መልእክት ይጻፉ..." style="margin:0;" required>
+          <button type="submit" class="btn">ላክ</button>
+        </form>
+      </div>
+
+      <!-- 4. ማስታወሻ እና አላርም ማስገቢያ ፎርም -->
+      <div class="card">
+        <h2>⏰ የማስታወሻ እና አላርም ቅንብር (Reminder Form)</h2>
+        <form id="reminderForm">
+          <input type="text" id="remTitle" placeholder="የማስታወሻው ርዕስ (ምሳሌ፡ የትምህርት ፕሮጀክት ማስረከቢያ)" required>
+          <label>የፈተና/የቀጠሮው ቀን እና ሰዓት፡</label>
+          <input type="datetime-local" id="remDateTime" required>
+          
+          <label><strong>ከስንት ሰዓት/ደቂቃ በፊት ላስታውስህ?</strong></label>
+          <select id="remBefore">
+            <option value="15">ከ 15 ደቂቃ በፊት</option>
+            <option value="30">ከ 30 ደቂቃ በፊት</option>
+            <option value="60">ከ 1 ሰዓት በፊት</option>
+            <option value="1440">ከ 1 ቀን (24 ሰዓት) በፊት</option>
+          </select>
+
+          <button type="submit" class="btn">ማስታወሻ ያዝ (Set Reminder)</button>
+        </form>
+        <hr style="margin: 15px 0;">
+        <h3>የተያዙ ማስታወሻዎች</h3>
+        <div id="remindersList"></div>
+      </div>
+
     </div>
+  </div>
 
-    <!-- MODAL: FLEXIBLE REMINDER & ALARM SETUP FORM -->
-    <div id="modal-reminder" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-            <div class="flex justify-between items-center border-b pb-3 dark:border-slate-700">
-                <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-bell text-amber-500"></i> የማስታወቂያ እና የቀጠሮ ፎርም
-                </h3>
-                <button onclick="closeModal('modal-reminder')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <form onsubmit="saveReminder(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የማስታወሻው ርዕስ</label>
-                    <input type="text" id="rem-title" required placeholder="ለምሳሌ፡ የMidterm ፈተና" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ቀን</label>
-                        <input type="date" id="rem-date" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ሰዓት</label>
-                        <input type="time" id="rem-time" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500">
-                    </div>
-                </div>
+  <!-- Toast Notification Box -->
+  <div id="toast">🔔 ማስታወሻ!</div>
 
-                <!-- KEY FEATURE: How long before should we remind you? -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                        ከስንት ሰዓት/ቀን በፊት ማስታወስ እንዳለበት ይምረጡ (Pre-Alarm Time)
-                    </label>
-                    <select id="rem-before-time" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500" onchange="toggleCustomBeforeInput(this.value)">
-                        <option value="15-min">ከ15 ደቂቃ በፊት</option>
-                        <option value="30-min">ከ30 ደቂቃ በፊት</option>
-                        <option value="1-hour">ከ1 ሰዓት በፊት</option>
-                        <option value="1-day">ከ1 ቀን በፊት</option>
-                        <option value="2-day">ከ2 ቀን በፊት</option>
-                        <option value="custom">ሌላ የተለየ ሰዓት (Custom)...</option>
-                    </select>
-                </div>
+  <script>
+    // 1. ቨርቲካል ካላንደር መረጃ ማሳያ
+    const calendarEvents = [
+      { date: "ጥቅምት 12, 2017", title: "የ C++ Assignment 1 ማስረከቢያ" },
+      { date: "ጥቅምት 15, 2017", title: "የ Mathematics Mid Exam" },
+      { date: "ጥቅምት 20, 2017", title: "የ 3D Blender Project Demo" }
+    ];
 
-                <!-- Custom timing input hidden by default -->
-                <div id="custom-before-container" class="hidden">
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የተለየ ደቂቃ መጠን (በደቂቃ)</label>
-                    <input type="number" id="rem-custom-min" placeholder="ለምሳሌ፡ 45" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-900 focus:ring-2 focus:ring-sky-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የምልክት ዓይነት</label>
-                    <div class="flex gap-4 text-xs font-medium">
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="radio" name="rem-type" value="Exam" checked class="text-sky-500 focus:ring-sky-500"> ፈተና (Exam)
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="radio" name="rem-type" value="Assignment" class="text-sky-500 focus:ring-sky-500"> የቤት ስራ (Assignment)
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="radio" name="rem-type" value="Study" class="text-sky-500 focus:ring-sky-500"> የጥናት ጊዜ
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-2 border-t dark:border-slate-700">
-                    <button type="button" onclick="closeModal('modal-reminder')" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">ሰርዝ</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-600 text-white">ቅጠር & ማስታወሻ ያዝ</button>
-                </div>
-            </form>
+    const calendarContainer = document.getElementById('calendarTimeline');
+    calendarEvents.forEach(ev => {
+      calendarContainer.innerHTML += `
+        <div class="timeline-item">
+          <div class="timeline-date">${ev.date}</div>
+          <div>${ev.title}</div>
         </div>
-    </div>
+      `;
+    });
 
+    // 2. ሾርት ኖት ማኔጀር
+    const noteForm = document.getElementById('noteForm');
+    const notesList = document.getElementById('notesList');
+    let notes = [];
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        // APP INITIAL STATE / MOCK DATA
-        let notesData = [
-            { id: 1, title: 'Data Structures - Trees', category: 'Computer Science', date: 'ጥቅምት 12', content: 'Binary Search Trees (BST) traversal types: In-order, Pre-order, Post-order logic Summary.' },
-            { id: 2, title: 'Linear Algebra Matrices', category: 'Mathematics', date: 'ጥቅምት 10', content: 'Eigenvalues and Eigenvectors formula derivation step-by-step for test.' },
-            { id: 3, title: 'Newtonian Physics Dynamics', category: 'Physics', date: 'ጥቅምት 08', content: 'F=ma application in inclined plane problems with friction coefficients.' }
-        ];
+    noteForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('noteTitle').value;
+      const subject = document.getElementById('noteSubject').value;
+      const content = document.getElementById('noteContent').value;
 
-        let filesData = [
-            { id: 1, name: 'Database_Systems_Lecture3.pdf', type: 'pdf', size: '2.4 MB', date: 'ጥቅምት 14', category: 'Computer Science' },
-            { id: 2, name: 'Calculus_II_Assignment_Solutions.docx', type: 'docx', size: '1.1 MB', date: 'ጥቅምት 11', category: 'Mathematics' },
-            { id: 3, name: 'Lab_Circuit_Diagram.png', type: 'image', size: '4.8 MB', date: 'ጥቅምት 09', category: 'Physics' }
-        ];
+      const note = { id: Date.now(), title, subject, content };
+      notes.push(note);
+      renderNotes();
+      noteForm.reset();
+      showToast("ኖት በተሳካ ሁኔታ ተቀምጧል!");
+    });
 
-        let scheduleData = [
-            { id: 1, dayName: 'ዛሬ (Today)', fullDate: 'ጥቅምት 15', title: 'የDatabase Systems ፈተና', time: '04:00 ከሰዓት', type: 'Exam', remindBefore: 'ከ1 ሰዓት በፊት' },
-            { id: 2, dayName: 'ነገ (Tomorrow)', fullDate: 'ጥቅምት 16', title: 'የSoftware Engineering ፕሮጀክት ማስረከቢያ', time: '11:59 ማታ', type: 'Assignment', remindBefore: 'ከ1 ቀን በፊት' },
-            { id: 3, dayName: 'ሐሙስ', fullDate: 'ጥቅምት 18', title: 'የLinear Algebra አጫጭር ጥያቄዎች (Quiz)', time: '03:30 ጧት', type: 'Exam', remindBefore: 'ከ30 ደቂቃ በፊት' },
-            { id: 4, dayName: 'ቅዳሜ', fullDate: 'ጥቅምት 20', title: 'የቡድን ጥናት ፕሮግራም በቤተመጻሕፍት', time: '08:00 ጧት', type: 'Study', remindBefore: 'ከ15 ደቂቃ በፊት' }
-        ];
+    function renderNotes() {
+      notesList.innerHTML = '';
+      notes.forEach(n => {
+        notesList.innerHTML += `
+          <div style="background: #f9fafb; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            <span style="font-size: 12px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px;">${n.subject}</span>
+            <h4 style="margin: 5px 0;">${n.title}</h4>
+            <p style="font-size: 14px; color: #4b5563;">${n.content}</p>
+          </div>
+        `;
+      });
+    }
 
-        let chatContacts = [
-            { id: 1, name: 'ዮናስ ከበደ', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80', lastMsg: 'ስማ ኖቱን ላክልኝማ?', time: '10:42 AM', unread: 2, online: true },
-            { id: 2, name: 'ኤልሳቤጥ ታደሰ', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80', lastMsg: 'ነገ ቤተመጻሕፍት እንገናኝ', time: 'ትላንት', unread: 0, online: false },
-            { id: 3, name: 'የCS 3rd Year Group 👥', avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&auto=format&fit=crop&q=80', lastMsg: 'መምህሩ assignment አራዝመዋል!', time: 'ጥቅምት 13', unread: 0, online: true }
-        ];
+    // 3. ፋይል ማስቀመጫ (File Storage)
+    const fileForm = document.getElementById('fileForm');
+    const filesList = document.getElementById('filesList');
 
-        let activeChatMessages = [
-            { id: 1, sender: 'other', text: 'ሰላም ሰላማዊት! የቋንቋ ኮዲንግ ሾርት ኖት አለሽ?', time: '10:30 AM' },
-            { id: 2, sender: 'me', text: 'አዎ አለኝ! አሁን በፋይል ማስቀመጫው ላይ ስቅዬዋለሁ ማየት ትችላለህ።', time: '10:35 AM' },
-            { id: 3, sender: 'other', text: 'እሺ በጣም አመሰግናለሁ! ኖቱን ላክልኝማ?', time: '10:42 AM' }
-        ];
+    fileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('fileName').value;
+      const fileInput = document.getElementById('fileInput');
+      const fileName = fileInput.files[0] ? fileInput.files[0].name : "document.pdf";
 
-        // RENDER FUNCTIONS ON LOAD
-        window.onload = function() {
-            renderDashboard();
-            renderNotes('all');
-            renderFiles();
-            renderChatContacts();
-            renderChatMessages();
-            renderVerticalCalendar();
-        };
+      filesList.innerHTML += `
+        <div style="display: flex; justify-content: space-between; background: #f3f4f6; padding: 8px; border-radius: 4px; margin-bottom: 5px;">
+          <span>📄 <strong>${name}</strong> (${fileName})</span>
+          <a href="#" onclick="alert('ፋይሉ ወርዷል!')" style="color: #2563eb; text-decoration: none;">ወርድ (Download)</a>
+        </div>
+      `;
+      fileForm.reset();
+      showToast("ፋይል በተሳካ ሁኔታ ተስቅሏል!");
+    });
 
-        // NAVIGATION TAB SWITCHER
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-sky-50', 'dark:bg-slate-700', 'text-sky-600', 'dark:text-sky-400');
-                btn.classList.add('text-slate-600', 'dark:text-slate-300');
-            });
+    // 4. ቻት መለዋወጫ
+    const chatForm = document.getElementById('chatForm');
+    const chatBox = document.getElementById('chatBox');
 
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            const activeNav = document.getElementById(`nav-${tabName}`);
-            activeNav.classList.add('bg-sky-50', 'dark:bg-slate-700', 'text-sky-600', 'dark:text-sky-400');
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      if (input.value.trim() !== "") {
+        chatBox.innerHTML += `<div class="chat-msg me"><strong>እኔ፡</strong> ${input.value}</div>`;
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    });
 
-            const titles = {
-                'dashboard': 'ዋና ዳሽቦርድ',
-                'notes': 'ሾርት ኖት እና ፋይል ማኔጀር',
-                'chat': 'የተማሪዎች ቻት መድረክ',
-                'schedule': 'የቀን መቁጠሪያ እና መርሃግብር'
-            };
-            document.getElementById('page-title').innerText = titles[tabName] || 'ተማሪ ፖርታል';
-        }
+    // 5. የማስታወሻ አላርም (Reminder System)
+    const reminderForm = document.getElementById('reminderForm');
+    const remindersList = document.getElementById('remindersList');
 
-        // DARK MODE TOGGLE
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun text-lg w-6 text-center' : 'fa-solid fa-moon text-lg w-6 text-center';
-            document.getElementById('theme-text').innerText = isDark ? 'ብርሃን ሞድ' : 'ጨለማ ሞድ';
-        }
+    reminderForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('remTitle').value;
+      const dateTime = document.getElementById('remDateTime').value;
+      const before = document.getElementById('remBefore').value;
 
-        // DYNAMIC TOAST NOTIFICATIONS
-        function showToast(title, message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-xl shadow-xl bg-white dark:bg-slate-800 border-l-4 ${type === 'success' ? 'border-emerald-500' : 'border-sky-500'} transition-all transform translate-y-2 opacity-0`;
-            
-            toast.innerHTML = `
-                <div class="text-${type === 'success' ? 'emerald' : 'sky'}-500 mt-0.5">
-                    <i class="fa-solid fa-${type === 'success' ? 'circle-check' : 'bell'} text-lg"></i>
-                </div>
-                <div class="flex-1">
-                    <h4 class="text-xs font-bold text-slate-800 dark:text-white">${title}</h4>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${message}</p>
-                </div>
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 text-xs"><i class="fa-solid fa-xmark"></i></button>
-            `;
+      remindersList.innerHTML += `
+        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px; margin-bottom: 8px;">
+          <strong>⏰ ${title}</strong><br>
+          <small>ቀን፡ ${dateTime} | ማስታወቂያ፡ ከ ${before} ደቂቃ በፊት</small>
+        </div>
+      `;
 
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
+      showToast(`ማስታወሻ ተይዟል! ከ ${before} ደቂቃ በፊት ያሳውቅዎታል።`);
+      reminderForm.reset();
+    });
 
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-
-        // RENDER DASHBOARD RECENT ITEMS
-        function renderDashboard() {
-            // Recent Notes
-            const recentNotesContainer = document.getElementById('recent-notes-grid');
-            recentNotesContainer.innerHTML = notesData.slice(0, 2).map(note => `
-                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-700 space-y-2">
-                    <div class="flex justify-between items-start">
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300">${note.category}</span>
-                        <span class="text-[10px] text-slate-400">${note.date}</span>
-                    </div>
-                    <h4 class="font-semibold text-sm text-slate-800 dark:text-white">${note.title}</h4>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${note.content}</p>
-                </div>
-            `).join('');
-
-            // Recent Files
-            const recentFilesContainer = document.getElementById('recent-files-list');
-            recentFilesContainer.innerHTML = filesData.slice(0, 3).map(file => `
-                <div class="py-2.5 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg ${getFileColor(file.type)} flex items-center justify-center text-xs">
-                            <i class="${getFileIcon(file.type)}"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">${file.name}</p>
-                            <p class="text-[10px] text-slate-400">${file.size} • ${file.date}</p>
-                        </div>
-                    </div>
-                    <button onclick="copyLink('${file.name}')" class="text-xs text-sky-500 hover:text-sky-600 p-1"><i class="fa-solid fa-download"></i></button>
-                </div>
-            `).join('');
-
-            // Mini Vertical Schedule
-            const miniTimeline = document.getElementById('mini-vertical-timeline');
-            miniTimeline.innerHTML = scheduleData.slice(0, 3).map(item => `
-                <div class="relative pl-6">
-                    <span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-sky-500 ring-4 ring-white dark:ring-slate-800"></span>
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-[10px] font-bold text-sky-600 dark:text-sky-400">${item.dayName} (${item.fullDate})</span>
-                            <h5 class="text-xs font-bold text-slate-800 dark:text-white mt-0.5">${item.title}</h5>
-                            <p class="text-[10px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${item.time}</p>
-                        </div>
-                        <span class="text-[9px] px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-300 font-semibold">${item.remindBefore}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // RENDER ALL NOTES
-        function renderNotes(categoryFilter = 'all') {
-            const grid = document.getElementById('all-notes-grid');
-            const filtered = categoryFilter === 'all' ? notesData : notesData.filter(n => n.category === categoryFilter);
-
-            if(filtered.length === 0) {
-                grid.innerHTML = `<p class="text-xs text-slate-400 col-span-2 py-4">ምንም አይነት ማስታወሻ አልተገኘም።</p>`;
-                return;
-            }
-
-            grid.innerHTML = filtered.map(note => `
-                <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition space-y-3">
-                    <div class="flex justify-between items-start">
-                        <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">${note.category}</span>
-                        <div class="flex gap-1">
-                            <button onclick="deleteNote(${note.id})" class="text-slate-400 hover:text-red-500 text-xs p-1"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <h4 class="font-bold text-slate-800 dark:text-white text-sm">${note.title}</h4>
-                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${note.content}</p>
-                    <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex justify-between items-center text-[10px] text-slate-400">
-                        <span><i class="fa-regular fa-calendar mr-1"></i>${note.date}</span>
-                        <button onclick="copyToClipboard('${note.title}: ${note.content}')" class="text-sky-500 hover:underline"><i class="fa-regular fa-copy mr-1"></i>ኮፒ አድርግ</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // FILTER NOTES BY CATEGORY
-        function filterNotes(cat) {
-            document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-                btn.classList.remove('bg-sky-500', 'text-white');
-                btn.classList.add('bg-slate-100', 'text-slate-600', 'dark:bg-slate-700', 'dark:text-slate-300');
-            });
-            event.target.classList.remove('bg-slate-100', 'text-slate-600', 'dark:bg-slate-700', 'dark:text-slate-300');
-            event.target.classList.add('bg-sky-500', 'text-white');
-            renderNotes(cat);
-        }
-
-        // RENDER FILES IN STORAGE MANAGER
-        function renderFiles() {
-            const container = document.getElementById('all-files-container');
-            container.innerHTML = filesData.map(file => `
-                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl ${getFileColor(file.type)} flex items-center justify-center text-sm shadow-sm">
-                            <i class="${getFileIcon(file.type)}"></i>
-                        </div>
-                        <div>
-                            <h5 class="text-xs font-bold text-slate-800 dark:text-white">${file.name}</h5>
-                            <p class="text-[10px] text-slate-400">${file.category} • ${file.size} • ${file.date}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="copyLink('${file.name}')" class="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-medium shadow-sm transition">
-                            <i class="fa-solid fa-download mr-1"></i> አውርድ
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // HELPER UTILS FOR FILES
-        function getFileIcon(type) {
-            switch(type) {
-                case 'pdf': return 'fa-solid fa-file-pdf';
-                case 'docx': return 'fa-solid fa-file-word';
-                case 'image': return 'fa-solid fa-file-image';
-                default: return 'fa-solid fa-file-zipper';
-            }
-        }
-        function getFileColor(type) {
-            switch(type) {
-                case 'pdf': return 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300';
-                case 'docx': return 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300';
-                case 'image': return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300';
-                default: return 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300';
-            }
-        }
-
-        // RENDER PEER CHAT CONTACTS & MESSAGES
-        function renderChatContacts() {
-            const list = document.getElementById('chat-contacts-list');
-            list.innerHTML = chatContacts.map((c, i) => `
-                <div onclick="selectChat(${c.id})" class="p-3 rounded-xl flex items-center gap-3 cursor-pointer transition ${i===0 ? 'bg-sky-50 dark:bg-slate-700/60' : 'hover:bg-slate-100 dark:hover:bg-slate-700/30'}">
-                    <div class="relative">
-                        <img src="${c.avatar}" class="w-10 h-10 rounded-full object-cover">
-                        ${c.online ? '<span class="w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full absolute bottom-0 right-0"></span>' : ''}
-                    </div>
-                    <div class="flex-1 overflow-hidden">
-                        <div class="flex justify-between items-center">
-                            <h5 class="text-xs font-bold text-slate-800 dark:text-white truncate">${c.name}</h5>
-                            <span class="text-[10px] text-slate-400">${c.time}</span>
-                        </div>
-                        <div class="flex justify-between items-center mt-0.5">
-                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">${c.lastMsg}</p>
-                            ${c.unread > 0 ? `<span class="bg-sky-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">${c.unread}</span>` : ''}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderChatMessages() {
-            const container = document.getElementById('chat-messages-container');
-            container.innerHTML = activeChatMessages.map(m => `
-                <div class="flex flex-col ${m.sender === 'me' ? 'items-end' : 'items-start'}">
-                    <div class="max-w-[80%] rounded-2xl p-3 text-xs ${m.sender === 'me' ? 'bg-sky-500 text-white rounded-br-none' : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-600 rounded-bl-none shadow-sm'}">
-                        <p class="leading-relaxed">${m.text}</p>
-                    </div>
-                    <span class="text-[9px] text-slate-400 mt-1 px-1">${m.time}</span>
-                </div>
-            `).join('');
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function sendMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if(!text) return;
-
-            activeChatMessages.push({
-                id: Date.now(),
-                sender: 'me',
-                text: text,
-                time: 'አሁን'
-            });
-
-            input.value = '';
-            renderChatMessages();
-
-            // Simulate quick auto-reply from classmate
-            setTimeout(() => {
-                activeChatMessages.push({
-                    id: Date.now(),
-                    sender: 'other',
-                    text: 'እሺ ተቀብያለሁ! ሌላ ጥያቄ ካለኝ እጠይቅሃለሁ።',
-                    time: 'አሁን'
-                });
-                renderChatMessages();
-                showToast('አዲስ መልእክት', 'ከ ዮናስ ከበደ መልእክት ደርሶዎታል');
-            }, 1200);
-        }
-
-        function triggerChatFileAttach() {
-            showToast('ፋይል ማያያዣ', 'የላኩት ፋይል በቻቱ ውይይት ውስጥ ይያያዛል');
-        }
-
-        function selectChat(id) {
-            const contact = chatContacts.find(c => c.id === id);
-            if(contact) {
-                document.getElementById('active-chat-name').innerText = contact.name;
-                document.getElementById('active-chat-avatar').src = contact.avatar;
-            }
-        }
-
-        // RENDER VERTICAL CALENDAR TIMELINE
-        function renderVerticalCalendar() {
-            const container = document.getElementById('vertical-calendar-container');
-            
-            container.innerHTML = scheduleData.map(item => `
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div class="flex items-start gap-4">
-                        <!-- Vertical Date Badge -->
-                        <div class="w-14 h-16 rounded-2xl bg-sky-50 dark:bg-slate-700 border border-sky-100 dark:border-slate-600 flex flex-col items-center justify-center text-sky-600 dark:text-sky-400 flex-shrink-0">
-                            <span class="text-[10px] font-bold uppercase">${item.dayName}</span>
-                            <span class="text-base font-extrabold">${item.fullDate.split(' ')[1]}</span>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md ${item.type === 'Exam' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300' : item.type === 'Assignment' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300'}">${item.type}</span>
-                                <span class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${item.time}</span>
-                            </div>
-                            <h4 class="font-bold text-slate-800 dark:text-white text-base">${item.title}</h4>
-                            <p class="text-xs text-sky-600 dark:text-sky-400 font-medium mt-1">
-                                <i class="fa-solid fa-bell mr-1"></i> ቅድመ-ማስጠንቀቂያ፡ <strong class="underline">${item.remindBefore}</strong> ይደርሰዎታል
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 self-end md:self-center">
-                        <button onclick="triggerAlarmTest('${item.title}', '${item.remindBefore}')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-600 text-xs font-semibold transition">
-                            <i class="fa-solid fa-play text-sky-500 mr-1"></i> አላርም ፍተሻ
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // TRIGGER ALARM TEST
-        function triggerAlarmTest(title, timeBefore) {
-            showToast('⏰ የማስታወቂያ አላርም!', `ተቀጥሯል፡ "${title}" (${timeBefore})`, 'success');
-        }
-
-        // FORM HANDLERS & MODALS
-        function openAddNoteModal() { document.getElementById('modal-note').classList.remove('hidden'); }
-        function openFileUploadModal() { document.getElementById('modal-file').classList.remove('hidden'); }
-        function openReminderModal() { document.getElementById('modal-reminder').classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-        function toggleCustomBeforeInput(val) {
-            const container = document.getElementById('custom-before-container');
-            if(val === 'custom') {
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        function saveNote(e) {
-            e.preventDefault();
-            const title = document.getElementById('note-title').value;
-            const category = document.getElementById('note-category').value;
-            const content = document.getElementById('note-content').value;
-
-            const newNote = {
-                id: Date.now(),
-                title,
-                category,
-                content,
-                date: 'ዛሬ'
-            };
-
-            notesData.unshift(newNote);
-            renderNotes('all');
-            renderDashboard();
-            closeModal('modal-note');
-            showToast('ተሳክቷል!', 'አዲስ ሾርት ኖት በውጤታማነት ተመዝግቧል', 'success');
-            e.target.reset();
-        }
-
-        function saveFileUpload(e) {
-            e.preventDefault();
-            const name = document.getElementById('file-name').value;
-            const type = document.getElementById('file-type').value;
-
-            const newFile = {
-                id: Date.now(),
-                name,
-                type,
-                size: '1.8 MB',
-                date: 'ዛሬ',
-                category: 'General'
-            };
-
-            filesData.unshift(newFile);
-            renderFiles();
-            renderDashboard();
-            closeModal('modal-file');
-            showToast('ፋይል ተሰቅሏል!', 'ፋይሉ በተሳካ ሁኔታ ተቀምጧል', 'success');
-            e.target.reset();
-        }
-
-        function saveReminder(e) {
-            e.preventDefault();
-            const title = document.getElementById('rem-title').value;
-            const dateVal = document.getElementById('rem-date').value;
-            const timeVal = document.getElementById('rem-time').value;
-            const beforeVal = document.getElementById('rem-before-time').value;
-            const type = document.querySelector('input[name="rem-type"]:checked').value;
-
-            let remindText = 'ከ15 ደቂቃ በፊት';
-            if(beforeVal === '30-min') remindText = 'ከ30 ደቂቃ በፊት';
-            if(beforeVal === '1-hour') remindText = 'ከ1 ሰዓት በፊት';
-            if(beforeVal === '1-day') remindText = 'ከ1 ቀን በፊት';
-            if(beforeVal === '2-day') remindText = 'ከ2 ቀን በፊት';
-            if(beforeVal === 'custom') {
-                const customMin = document.getElementById('rem-custom-min').value || '10';
-                remindText = `ከ${customMin} ደቂቃ በፊት`;
-            }
-
-            const newSched = {
-                id: Date.now(),
-                dayName: 'የተያዘ',
-                fullDate: dateVal || 'ጥቅምት 22',
-                title,
-                time: timeVal || '09:00',
-                type,
-                remindBefore: remindText
-            };
-
-            scheduleData.unshift(newSched);
-            renderVerticalCalendar();
-            renderDashboard();
-            closeModal('modal-reminder');
-            showToast('ማስታወሻ ተቀጥሯል!', `ማስታወሻዎ (${remindText}) በተሳካ ሁኔታ ተይዟል`, 'success');
-            e.target.reset();
-        }
-
-        function deleteNote(id) {
-            notesData = notesData.filter(n => n.id !== id);
-            renderNotes('all');
-            renderDashboard();
-            showToast('ተሰርዟል', 'ኖቱ ከሲስተሙ ተሰርዟል');
-        }
-
-        function updateFileNamePreview(input) {
-            if(input.files && input.files[0]) {
-                document.getElementById('file-chosen-text').innerText = `የተመረጠ፡ ${input.files[0].name}`;
-            }
-        }
-
-        function copyToClipboard(text) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast('ኮፒ ተደርጓል', 'ፅሁፉ ወደ ሰሌዳዎ ተገልብጧል', 'success');
-        }
-
-        function copyLink(filename) {
-            showToast('ዳውንሎድ በመካሄድ ላይ...', `${filename} በማውረድ ላይ ነው`, 'success');
-        }
-    </script>
+    // Toast ማሳወቂያ ማሳያ
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.className = "show";
+      setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+  </script>
 </body>
 </html>
